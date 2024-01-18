@@ -1,4 +1,4 @@
-name: CI
+name: CI for SCP Upload
 env:
   TZ: Asia/Shanghai
 
