@@ -6,3 +6,8 @@ DOMAIN,mirrors.tencentyun.com
 DOMAIN,cn.archive.ubuntu.com
 DOMAIN-SUFFIX,hdslb.com
 DOMAIN-SUFFIX,rustdesk.com
+
+DOMAIN-SUFFIX,alibaba-inc.com,DIRECT
+DOMAIN-SUFFIX,laizn.com,DIRECT
+DOMAIN-SUFFIX,uc.cn,DIRECT
+PROCESS-NAME,Resilio Sync.exe,DIRECT
