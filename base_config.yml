@@ -126,7 +126,11 @@ experimental:
 #    type: select
 #    proxies:
 #      - Shadowsocks
-#rules:
+rules:
+  - DOMAIN-SUFFIX,alibaba-inc.com,DIRECT
+  - DOMAIN-SUFFIX,laizn.com,DIRECT
+  - DOMAIN-SUFFIX,uc.cn,DIRECT
+  - PROCESS-NAME,Resilio Sync.exe,DIRECT
 #  - 'MATCH,DIRECT'
 
 # Clash for Windows
