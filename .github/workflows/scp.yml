@@ -123,7 +123,7 @@ jobs:
               for target in "clash" "quan" "v2ray" "ssr" "singbox"
               do
                   config=$(echo ${default_config/%.ini/${suffix}.ini} |jq -rR @uri)
-                  echo 'Config is ' $config
+                  echo 'requesting' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
                   code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
                   if [[ "$code" != 200 && -s config/$target$suffix ]]
                   then
