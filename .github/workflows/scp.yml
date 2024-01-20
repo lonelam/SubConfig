@@ -118,13 +118,13 @@ jobs:
           url=$(cat subscribe.json |jq -r 'to_entries|map(if (.value|(startswith("http")and(startswith("https://t.me/")|not))) then (.key|tostring|"sub/"+.) else .value end)|join("|")|@uri')
           echo 拼接自己需要的配置请求，
           mkdir -p config
-          for suffix in "" "-basic" "-break"
+          for suffix in "" "-basic" "-break" "-full"
           do
               for target in "clash" "quan" "v2ray" "ssr" "singbox"
               do
                   config=$(echo ${default_config/%.ini/${suffix}.ini} |jq -rR @uri)
                   echo 'Config is ' $config
-                  code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=ACL4SSR_Online_Full&$params")
+                  code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
                   if [[ "$code" != 200 && -s config/$target$suffix ]]
                   then
                       echo 订阅转换异常，
