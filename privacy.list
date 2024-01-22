@@ -1,0 +1,5 @@
+
+# need more privacy
+DOMAIN-SUFFIX,laizn.com,DIRECT
+PROCESS-NAME,Resilio Sync.exe,DIRECT
+DST-PORT,22,DIRECT
