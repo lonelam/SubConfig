@@ -6,4 +6,5 @@ DOMAIN-SUFFIX,alibaba.com
 DOMAIN-SUFFIX,uc.cn
 PROCESS-NAME,Resilio Sync.exe
 PROCESS-NAME,AliedrSrv.exe
+PROCESS-NAME,AliAVSrv.exe
 DST-PORT,22
