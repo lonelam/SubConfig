@@ -1,7 +1,9 @@
 
 # need more privacy
 DOMAIN-SUFFIX,laizn.com
-DOMAIN-SUFFIX,alibaba-inc.com,DIRECT
-DOMAIN-SUFFIX,uc.cn,DIRECT
+DOMAIN-SUFFIX,alibaba-inc.com
+DOMAIN-SUFFIX,alibaba.com
+DOMAIN-SUFFIX,uc.cn
 PROCESS-NAME,Resilio Sync.exe
+PROCESS-NAME,AliedrSrv.exe
 DST-PORT,22
