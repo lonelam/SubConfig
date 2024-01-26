@@ -120,7 +120,7 @@ jobs:
           mkdir -p config
           for suffix in "" "-work"
           do
-              for target in "clash" "quan" "v2ray" "ssr"
+              for target in "clash" "quan" "v2ray" "ssr" "surfboard"
               do
                   config=$(echo ${default_config/%.ini/${suffix}.ini} |jq -rR @uri)
                   echo 'requesting' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
