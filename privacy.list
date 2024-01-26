@@ -4,6 +4,7 @@ DOMAIN-SUFFIX,laizn.com
 DOMAIN-SUFFIX,alibaba-inc.com
 DOMAIN-SUFFIX,alibaba.com
 DOMAIN-SUFFIX,uc.cn
+DOMAIN-SUFFIX,upaas.quark.cn
 PROCESS-NAME,Resilio Sync.exe
 PROCESS-NAME,AliedrSrv.exe
 PROCESS-NAME,AliAVSrv.exe
