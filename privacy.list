@@ -8,4 +8,5 @@ DOMAIN-SUFFIX,upaas.quark.cn
 PROCESS-NAME,Resilio Sync.exe
 PROCESS-NAME,AliedrSrv.exe
 PROCESS-NAME,AliAVSrv.exe
+PROCESS-NAME,iDingTalk.exe
 DST-PORT,22
