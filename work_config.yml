@@ -307,6 +307,7 @@ cfw-bypass:
   - "*.1688.com"
   - "*.aliapp.org"
   - "*.alibaba.com"
+  - "*.alibaba.net"
   - "*.alibabacloud.com"
   - "*.alibabausercontent.com"
   - "*.alicdn.com"
