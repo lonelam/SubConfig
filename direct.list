@@ -7,5 +7,6 @@ DOMAIN,cn.archive.ubuntu.com
 DOMAIN-SUFFIX,hdslb.com
 DOMAIN-SUFFIX,rustdesk.com
 
-DOMAIN-SUFFIX,alibaba-inc.com,DIRECT
-DOMAIN-SUFFIX,uc.cn,DIRECT
+DOMAIN-SUFFIX,alibaba-inc.com
+DOMAIN-SUFFIX,uc.cn
+DOMAIN-SUFFIX,tracker.m-team.io
