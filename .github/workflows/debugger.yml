@@ -71,6 +71,11 @@ jobs:
           echo 运行subconverter
           ./subconverter >/dev/null 2>&1 &
 
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: subconverter/_SubConfig
+          
       - name: cache external config
         run: |
           branch=${GITHUB_REF#refs/heads/}
