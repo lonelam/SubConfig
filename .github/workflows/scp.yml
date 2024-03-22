@@ -116,6 +116,7 @@ jobs:
           fi
           echo 订阅转成本地请求，其他链接保留，
           url=$(cat subscribe.json |jq -r 'to_entries|map(if (.value|(startswith("http")and(startswith("https://t.me/")|not))) then (.key|tostring|"sub/"+.) else .value end)|join("|")|@uri')
+          url=${{ secrets.subscribe }}
           echo 拼接自己需要的配置请求，
           mkdir -p config
           for suffix in "" "-work"
