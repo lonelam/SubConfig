@@ -3,6 +3,9 @@ env:
   TZ: Asia/Shanghai
 
 on:
+  push:
+    tags:
+      - "debug-*"
   workflow_dispatch:
 
 jobs:
