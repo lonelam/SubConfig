@@ -17,8 +17,8 @@ on:
     paths-ignore:
       - ".github/workflows/*"
       - "!.github/workflows/subconverter.yml"
-  # schedule:
-  #   - cron: "0 */2 * * *"
+  schedule:
+    - cron: "0 8 * * *"
   watch:
     types: [started]
   workflow_dispatch:
