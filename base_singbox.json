@@ -184,8 +184,8 @@
             "external_ui_download_detour": "🚀 节点选择",
             "secret": "",
             "default_mode": "rule",
-            "store_selected": true,
-            "cache_file": "cache.db"
-        }
+            "store_selected": true
+        },
+        "cache_file": "cache.db"
     }
 }
