@@ -21,8 +21,8 @@
                 "detour": "DIRECT"
             },
             {
-              "tag": "dns_fakeip",
-              "address": "fakeip"
+                "tag": "dns_fakeip",
+                "address": "fakeip"
             },
             {
                 "tag": "dns_block",
@@ -114,11 +114,11 @@
             {
                 "geosite": [
                     "geolocation-!cn"
-                  ],
-                  "query_type": [
+                ],
+                "query_type": [
                     "A"
-                  ],
-                  "server": "dns_fakeip"
+                ],
+                "server": "dns_fakeip"
             },
             {
                 "geosite": [
@@ -143,8 +143,8 @@
         "final": "dns_direct",
         "independent_cache": true,
         "fakeip": {
-          "enabled": true,
-          "inet4_range": "198.18.0.0/15"
+            "enabled": true,
+            "inet4_range": "198.18.0.0/15"
         }
     },
     "ntp": {
@@ -186,6 +186,13 @@
             "default_mode": "rule",
             "store_selected": true
         },
-        "cache_file": "cache.db"
+        "cache_file": {
+            "enabled": true,
+            "path": "cache.db",
+            "cache_id": "",
+            "store_fakeip": false,
+            "store_rdrc": false,
+            "rdrc_timeout": ""
+        }
     }
 }
