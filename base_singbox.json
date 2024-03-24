@@ -190,9 +190,7 @@
             "enabled": true,
             "path": "cache.db",
             "cache_id": "",
-            "store_fakeip": false,
-            "store_rdrc": false,
-            "rdrc_timeout": ""
+            "store_fakeip": false
         }
     }
 }
