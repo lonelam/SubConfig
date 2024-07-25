@@ -6,6 +6,8 @@ DOMAIN-SUFFIX,alibaba.com
 DOMAIN-SUFFIX,alibaba.net
 DOMAIN-SUFFIX,uc.cn
 DOMAIN-SUFFIX,upaas.quark.cn
+DOMAIN-SUFFIX,quark.cn
+DOMAIN-SUFFIX,effirst.com
 PROCESS-NAME,Resilio Sync.exe
 PROCESS-NAME,AliedrSrv.exe
 PROCESS-NAME,AliAVSrv.exe
