@@ -1,0 +1,3 @@
+# Additional proxy servers
+
+socks5://localhost:9000#%E6%9C%AC%E5%9C%B0Debug%20Proxy

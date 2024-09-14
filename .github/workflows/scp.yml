@@ -105,36 +105,46 @@ jobs:
           default_config="_SubConfig/subconverter.ini"
           params="emoji=true&list=false&fdn=false&sort=false&new_name=true"
           mkdir -p subconverter/sub
-          echo 先整理出订阅数组，
-          cat subscribe |jq -srR 'split("\n")|map(select(length > 0))' > subscribe.json
-          echo 再下载节点列表，方便后面复用避免重复请求机场订阅，
-          cat subscribe.json |jq -r 'map(select(startswith("http")and(startswith("https://t.me/")|not)))' |jq -r 'to_entries[]|"echo fetching: "+(.key|tostring)+" && "+"curl -s -L --fail -o subconverter/sub/"+(.key|tostring)+" "+(.value|@sh)' |sh -e
-
-          if [ $? != 0 ]
-          then
-              echo 订阅下载失败，
-              exit 2
+      
+          echo "Creating subscribe.json with extra URL"
+          cat $SUBSCRIBE_FILE | jq -srR 'split("\n") | map(select(length > 0)) + ["_SubConfig/extra_servers.txt"]' > subscribe.json
+      
+          echo "Downloading node lists"
+          cat subscribe.json | jq -r '
+            map(select(startswith("http") and (startswith("https://t.me/") | not)))
+            | to_entries[]
+            | "echo fetching: " + (.key | tostring) + " && " + "curl -s -L --fail -o subconverter/sub/" + (.key | tostring) + " " + (.value | @sh)
+          ' | sh -e
+      
+          if [ $? != 0 ]; then
+            echo "Subscription download failed"
+            exit 2
           fi
-          echo 订阅转成本地请求，其他链接保留，
-          url=$(cat subscribe.json |jq -r 'to_entries|map(if (.value|(startswith("http")and(startswith("https://t.me/")|not))) then (.key|tostring|"sub/"+.) else .value end)|join("|")|@uri')
-          echo 拼接自己需要的配置请求，
+      
+          echo "Converting subscriptions to local requests, keeping other links"
+          url=$(cat subscribe.json | jq -r '
+            to_entries
+            | map(if (.value | (startswith("http") and (startswith("https://t.me/") | not))) then "sub/" + (.key | tostring) else .value end)
+            | join("|")
+            | @uri
+          ')
+      
+          echo "Constructing configuration requests"
           mkdir -p config
-          for suffix in "" "-work"
-          do
-              for target in "clash" "quan" "v2ray" "ssr" "surfboard" "singbox"
-              do
-                  config=$(echo ${default_config/%.ini/${suffix}.ini} |jq -rR @uri)
-                  echo 'requesting' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
-                  code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
-                  if [[ "$code" != 200 && -s config/$target$suffix ]]
-                  then
-                      echo 订阅转换异常，
-                      wc config/$target$suffix
-                      cat config/$target$suffix
-                      exit 1
-                  fi
-              done
+          for suffix in "" "-work"; do
+            for target in "clash" "quan" "v2ray" "ssr" "surfboard" "singbox"; do
+              config=$(echo ${default_config/%.ini/${suffix}.ini} | jq -rR @uri)
+              echo "Requesting http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
+              code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
+              if [[ "$code" != 200 && -s config/$target$suffix ]]; then
+                echo "Subscription conversion failed"
+                wc config/$target$suffix
+                cat config/$target$suffix
+                exit 1
+              fi
+            done
           done
+        
 
       - name: compress config
         run: |
