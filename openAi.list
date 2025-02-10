@@ -17,3 +17,7 @@ DOMAIN-SUFFIX,openaiapi-site.azureedge.net
 DOMAIN-SUFFIX,sentry.io
 DOMAIN-SUFFIX,stripe.com
 DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-KEYWORD,grazie.aws.intellij.net
+DOMAIN-KEYWORD,grazie.ai
+DOMAIN,api.app.prod.grazie.aws.intellij.net
+DOMAIN,api.jetbrains.ai
