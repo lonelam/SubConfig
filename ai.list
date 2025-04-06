@@ -1,0 +1,45 @@
+# AI Services Configuration
+# Last updated: 2025-04-07
+
+# OpenAI
+DOMAIN-KEYWORD,openai
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,openaiapi-site.azureedge.net
+
+# OpenAI Dependencies
+DOMAIN-SUFFIX,auth0.com
+DOMAIN-SUFFIX,challenges.cloudflare.com
+DOMAIN-SUFFIX,client-api.arkoselabs.com
+DOMAIN-SUFFIX,events.statsigapi.net
+DOMAIN-SUFFIX,featuregates.org
+DOMAIN-SUFFIX,identrust.com
+DOMAIN-SUFFIX,intercom.io
+DOMAIN-SUFFIX,intercomcdn.com
+DOMAIN-SUFFIX,sentry.io
+DOMAIN-SUFFIX,stripe.com
+DOMAIN-SUFFIX,webpubsub.azure.com
+
+# Google AI
+DOMAIN-SUFFIX,bard.google.com
+DOMAIN-SUFFIX,gemini.google.com
+
+# JetBrains AI
+DOMAIN-KEYWORD,grazie.aws.intellij.net
+DOMAIN-KEYWORD,grazie.ai
+DOMAIN,api.app.prod.grazie.aws.intellij.net
+DOMAIN,api.jetbrains.ai
+
+# Anthropic (Claude)
+DOMAIN,cdn.usefathom.com
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,claude.ai
+
+# Microsoft AI
+DOMAIN-SUFFIX,bing.com
+DOMAIN-SUFFIX,copilot.microsoft.com
+
+# Testing
+DOMAIN-SUFFIX,ip138.com
