@@ -117,10 +117,7 @@ jobs:
           mkdir -p subconverter/sub
       
           echo "Creating subscribe.json with extra URL"
-          # Combine contents of SUBSCRIBE_FILE and extra_servers.txt (if it exists)
-          combined_subs=$(cat "$SUBSCRIBE_FILE" 2>/dev/null; cat "_SubConfig/extra_servers.txt" 2>/dev/null)
-          # Create JSON array from combined lines, filtering empty ones
-          echo "$combined_subs" | jq -srR 'split("\n") | map(select(length > 0))' > subscribe.json
+          cat $SUBSCRIBE_FILE | jq -srR 'split("\n") | map(select(length > 0))' > subscribe.json
       
           echo "Downloading node lists"
           cat subscribe.json | jq -r '
