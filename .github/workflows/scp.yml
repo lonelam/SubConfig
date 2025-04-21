@@ -65,8 +65,17 @@ jobs:
               cat release
               exit 3
           fi
-          curl -s -L -O $(cat release | jq -r '.assets[]| select(.name == "subconverter-linux-amd64.tar.gz").browser_download_url')
-          tar -zxf subconverter-linux-amd64.tar.gz
+          DOWNLOAD_URL=$(cat release | jq -r '.assets[] | select(.name | startswith("subconverter-linux-amd64") and endswith(".tar.gz")) | .browser_download_url')
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "ERROR: Could not find linux-amd64 download URL in release assets."
+            cat release
+            exit 4
+          fi
+          echo "Downloading from $DOWNLOAD_URL"
+          curl -s -L -O "$DOWNLOAD_URL"
+          FILENAME=$(basename "$DOWNLOAD_URL")
+          echo "Extracting $FILENAME"
+          tar -zxf "$FILENAME"
           cd subconverter
           echo 更改base_path以便支持缓存base配置文件，
           mv pref.example.ini pref.ini
