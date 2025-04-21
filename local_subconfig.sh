@@ -1,8 +1,8 @@
 #!/bin/bash
-set -e
+# set -e
 
 # Enable debugging
-set -x
+# set -x
 
 # Function to log messages with timestamp
 log_msg() {
@@ -48,9 +48,10 @@ if [ $? -ne 0 ]; then
 fi
 
 log_msg "Parsing release information"
-DOWNLOAD_URL=$(cat release | jq -r '.assets[]| select(.name == "subconverter-linux-amd64.tar.gz").browser_download_url')
+# Use startswith/endswith to find the correct asset regardless of version
+DOWNLOAD_URL=$(cat release | jq -r '.assets[] | select(.name | startswith("subconverter-linux-amd64") and endswith(".tar.gz")) | .browser_download_url')
 if [ -z "$DOWNLOAD_URL" ]; then
-  log_msg "ERROR: Failed to extract download URL from API response"
+  log_msg "ERROR: Failed to extract linux-amd64 download URL from API response"
   log_msg "API Response:"
   cat release
   exit 3
@@ -65,7 +66,10 @@ if [ $? -ne 0 ]; then
 fi
 
 log_msg "Extracting subconverter"
-tar -zxvf subconverter-linux-amd64.tar.gz
+# Extract the actual filename from the URL
+FILENAME=$(basename "$DOWNLOAD_URL")
+log_msg "Extracting $FILENAME"
+tar -zxvf "$FILENAME"
 cd subconverter
 log_msg "Configuring subconverter..."
 for file in pref.example.ini pref.example.toml pref.example.yml; do
@@ -98,20 +102,12 @@ fi
 
 cd ..
 
-# Clone SubConfig repository if not already present
+# Check if _SubConfig directory exists
 if [ ! -d "subconverter/_SubConfig" ]; then
-  log_msg "Cloning SubConfig repository..."
-  mkdir -p subconverter/_SubConfig
-  REPO_URL="https://github.com/$(dirname "$(pwd)")"
-  log_msg "Repository URL: $REPO_URL"
-  git clone "$REPO_URL" subconverter/_SubConfig
-  if [ $? -ne 0 ]; then
-    log_msg "ERROR: Failed to clone repository"
-    exit 5
-  fi
-else
-  log_msg "SubConfig directory already exists"
+  log_msg "ERROR: Directory 'subconverter/_SubConfig' not found. Please ensure it exists."
+  exit 5
 fi
+log_msg "Found SubConfig directory: subconverter/_SubConfig"
 
 # Cache external config
 log_msg "Downloading ACL4SSR..."

@@ -85,7 +85,7 @@ jobs:
           sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
           sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
           echo 运行subconverter
-          ./subconverter >/dev/null 2>&1 &
+          ./subconverter -c pref.toml >/dev/null 2>&1 &
 
       - name: Checkout
         uses: actions/checkout@v2
