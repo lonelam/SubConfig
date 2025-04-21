@@ -8,6 +8,7 @@ on:
       - "*"
     branches:
       - main
+      - test
     paths-ignore:
       - ".github/workflows/*"
       - "!.github/workflows/subconverter.yml"
@@ -57,15 +58,15 @@ jobs:
       - name: run subconverter
         run: |
           echo 下载subconverter,
-          code=$(curl -s -L -o release -w '%{http_code}' -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" 'https://api.github.com/repos/lonelam/subconverter/releases/latest')
+          code=$(curl -s -L -o release -w '%{http_code}' -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" 'https://api.github.com/repos/lonelam/subconverter-rs/releases/latest')
           if [[ "$code" != 200 ]]
           then
               echo api请求异常，
               cat release
               exit 3
           fi
-          curl -s -L -O $(cat release | jq -r '.assets[]| select(.name == "subconverter_linux64.tar.gz").browser_download_url')
-          tar -zxf subconverter_linux64.tar.gz
+          curl -s -L -O $(cat release | jq -r '.assets[]| select(.name == "subconverter-linux-amd64.tar.gz").browser_download_url')
+          tar -zxf subconverter-linux-amd64.tar.gz
           cd subconverter
           echo 更改base_path以便支持缓存base配置文件，
           mv pref.example.ini pref.ini
