@@ -80,25 +80,25 @@ for file in pref.example.ini pref.example.toml pref.example.yml; do
   fi
 done
 
-mv pref.example.ini pref.ini
-mv pref.example.toml pref.toml
-mv pref.example.yml pref.yml
+# mv pref.example.ini pref.ini
+# mv pref.example.toml pref.toml
+# mv pref.example.yml pref.yml
 sed -i 's/^base_path=.*/base_path=_SubConfig/' pref.ini
 sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
 sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
 log_msg "Running subconverter in background..."
-./subconverter >/dev/null 2>&1 &
-SUBCONVERTER_PID=$!
-log_msg "Subconverter started with PID: $SUBCONVERTER_PID"
+# ./subconverter >/dev/null 2>&1 &
+# SUBCONVERTER_PID=$!
+# log_msg "Subconverter started with PID: $SUBCONVERTER_PID"
 
 # Check if subconverter is running
-sleep 2
-if ! ps -p $SUBCONVERTER_PID > /dev/null; then
-  log_msg "ERROR: Subconverter process died immediately"
-  log_msg "Checking subconverter logs:"
-  cat *.log 2>/dev/null || log_msg "No log files found"
-  exit 4
-fi
+# sleep 2
+# if ! ps -p $SUBCONVERTER_PID > /dev/null; then
+#   log_msg "ERROR: Subconverter process died immediately"
+#   log_msg "Checking subconverter logs:"
+#   cat *.log 2>/dev/null || log_msg "No log files found"
+#   exit 4
+# fi
 
 cd ..
 
@@ -134,7 +134,7 @@ function replace_url() {
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 log_msg "Current branch: $BRANCH"
 replace_url "https://github.com/$(dirname "$(pwd)")/raw/$BRANCH" _SubConfig
-replace_url "https://github.com/ACL4SSR/ACL4SSR/raw/master" _ACL4SSR
+replace_url "_ACL4SSR" _ACL4SSR
 
 # Update config
 log_msg "Updating configuration..."
@@ -151,7 +151,7 @@ log_msg "Downloading node lists"
 cat subscribe.json | jq -r '
   map(select(startswith("http") and (startswith("https://t.me/") | not)))
   | to_entries[]
-  | "echo fetching: " + (.key | tostring) + " && " + "curl -s -L --fail -o subconverter/sub/" + (.key | tostring) + " " + (.value | @sh)
+  | "echo fetching: " + (.key | tostring) + " && " + "curl -H \"User-Agent: clash-verge/v2.2.3\" -s -L --fail -o subconverter/sub/" + (.key | tostring) + " " + (.value | @sh)
 ' | sh -e
 
 if [ $? != 0 ]; then
