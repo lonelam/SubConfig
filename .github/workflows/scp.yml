@@ -148,7 +148,7 @@ jobs:
           sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
           sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
           echo 运行subconverter
-          RUST_LOG=debug ./subconverter > subconverter.stdout.log 2> subconverter.stderr.log &
+          RUST_LOG=trace ./subconverter > subconverter.stdout.log 2> subconverter.stderr.log &
           echo 等待subconverter启动...
           sleep 5 # Wait 5 seconds for subconverter to start
 
