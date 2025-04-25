@@ -87,27 +87,38 @@ jobs:
           fi
 
           echo "Downloading from $DOWNLOAD_URL"
-          # Use -o to specify a fixed output filename, as the URL might be a redirect
-          curl -s -L -o subconverter_download "$DOWNLOAD_URL"
+          # Use -LJO and Authorization header to follow redirects, get filename from header, and authenticate
+          curl -s -L -J -O -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$DOWNLOAD_URL"
+          # Find the downloaded file (likely a zip)
+          DOWNLOADED_FILE=$(ls *.zip | head -n 1) # Assuming only one zip is downloaded
+          if [ -z "$DOWNLOADED_FILE" ]; then
+            echo "ERROR: Could not find downloaded zip file."
+            echo "Listing directory contents:"
+            ls -l
+            # Print the content of any potential non-zip download attempt for debugging
+            if [ -f subconverter_download ]; then cat subconverter_download; fi 
+            exit 6
+          fi
+          echo "Downloaded file: $DOWNLOADED_FILE"
           echo "Downloaded file info:"
-          ls -l subconverter_download
+          ls -l "$DOWNLOADED_FILE"
           
           # Determine file type and extract accordingly
-          FILE_TYPE=$(file -b --mime-type subconverter_download)
+          FILE_TYPE=$(file -b --mime-type "$DOWNLOADED_FILE")
           echo "Detected file type: $FILE_TYPE"
 
           if [[ "$FILE_TYPE" == "application/zip" ]]; then
             echo "Extracting as zip archive..."
-            mv subconverter_download subconverter_download.zip
-            unzip subconverter_download.zip
+            # mv subconverter_download subconverter_download.zip # No longer needed with -J -O
+            unzip "$DOWNLOADED_FILE"
             # Assuming the zip contains the subconverter binary directly or in a known structure
             # Adjust the cd command if the structure inside the zip is different
           elif [[ "$FILE_TYPE" == "application/gzip" || "$FILE_TYPE" == "application/x-gzip" ]]; then
             echo "Extracting as tar.gz archive..."
-            mv subconverter_download subconverter_download.tar.gz
-            tar -zxf subconverter_download.tar.gz
+            # Assuming tar.gz file was named correctly by server or previous step
+            tar -zxf "$DOWNLOADED_FILE"
           else
-            echo "ERROR: Unknown file type: $FILE_TYPE"
+            echo "ERROR: Unknown or unexpected file type: $FILE_TYPE"
             exit 5
           fi
 
