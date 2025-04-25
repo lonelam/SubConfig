@@ -85,7 +85,7 @@ jobs:
           sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
           sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
           echo 运行subconverter
-          ./subconverter >/dev/null 2>&1 &
+          ./subconverter > subconverter.log 2>&1 &
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -146,10 +146,13 @@ jobs:
               config=$(echo ${default_config/%.ini/${suffix}.ini} | jq -rR @uri)
               echo "Requesting http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
               code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
-              if [[ "$code" != 200 && -s config/$target$suffix ]]; then
-                echo "Subscription conversion failed"
-                wc config/$target$suffix
-                cat config/$target$suffix
+              if [[ "$code" != 200 ]]; then
+                echo "Subscription conversion failed for target $target$suffix with HTTP code $code"
+                echo "URL: http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
+                echo "--- Subconverter Log ---"
+                cat subconverter/subconverter.log # Print subconverter log
+                echo "--- Curl Output ---"
+                cat config/$target$suffix # Print the output from curl
                 exit 1
               fi
             done
