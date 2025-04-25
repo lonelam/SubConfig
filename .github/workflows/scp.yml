@@ -86,6 +86,8 @@ jobs:
           sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
           echo 运行subconverter
           ./subconverter > subconverter.log 2>&1 &
+          echo 等待subconverter启动...
+          sleep 5 # Wait 5 seconds for subconverter to start
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -144,15 +146,29 @@ jobs:
           for suffix in "" "-work"; do
             for target in "clash" "quan" "v2ray" "ssr" "surfboard" "singbox"; do
               config=$(echo ${default_config/%.ini/${suffix}.ini} | jq -rR @uri)
-              echo "Requesting http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
-              code=$(curl -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
-              if [[ "$code" != 200 ]]; then
-                echo "Subscription conversion failed for target $target$suffix with HTTP code $code"
-                echo "URL: http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
+              request_url="http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
+              output_file="config/$target$suffix"
+              echo "Requesting $request_url"
+              code=$(curl -s -L -o "$output_file" -w '%{http_code}' "$request_url")
+              curl_exit_code=$?
+              echo "Curl exited with code: $curl_exit_code, HTTP code received: $code"
+
+              if [[ "$code" != 200 || $curl_exit_code -ne 0 ]]; then
+                echo "Subscription conversion failed for target $target$suffix"
+                echo "Curl exit code: $curl_exit_code, HTTP code: $code"
+                echo "URL: $request_url"
                 echo "--- Subconverter Log ---"
-                cat subconverter/subconverter.log # Print subconverter log
-                echo "--- Curl Output ---"
-                cat config/$target$suffix # Print the output from curl
+                if [ -f subconverter/subconverter.log ]; then
+                    cat subconverter/subconverter.log
+                else
+                    echo "Subconverter log file not found."
+                fi
+                echo "--- Curl Output (if any) ---"
+                if [ -f "$output_file" ]; then
+                    cat "$output_file"
+                else
+                    echo "Curl output file not found."
+                fi
                 exit 1
               fi
             done
