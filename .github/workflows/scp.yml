@@ -89,14 +89,14 @@ jobs:
           echo "Downloading from $DOWNLOAD_URL"
           # Use -LJO and Authorization header to follow redirects, get filename from header, and authenticate
           curl -s -L -J -O -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$DOWNLOAD_URL"
-          # Find the downloaded file (likely a zip)
-          DOWNLOADED_FILE=$(ls *.zip | head -n 1) # Assuming only one zip is downloaded
+          # Find the downloaded file (either .tar.gz or .zip)
+          DOWNLOADED_FILE=$(ls subconverter-linux-amd64*.{tar.gz,zip} 2>/dev/null | head -n 1)
           if [ -z "$DOWNLOADED_FILE" ]; then
-            echo "ERROR: Could not find downloaded zip file."
+            echo "ERROR: Could not find downloaded archive file (tar.gz or zip)."
             echo "Listing directory contents:"
             ls -l
-            # Print the content of any potential non-zip download attempt for debugging
-            if [ -f subconverter_download ]; then cat subconverter_download; fi 
+            # Print the content of any potential non-archive download attempt for debugging
+            if [ -f subconverter_download ]; then cat subconverter_download; fi
             exit 6
           fi
           echo "Downloaded file: $DOWNLOADED_FILE"
