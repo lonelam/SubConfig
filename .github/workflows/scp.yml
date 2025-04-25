@@ -85,7 +85,7 @@ jobs:
           sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
           sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
           echo 运行subconverter
-          ./subconverter > subconverter.log 2>&1 &
+          ./subconverter > subconverter.stdout.log 2> subconverter.stderr.log &
           echo 等待subconverter启动...
           sleep 5 # Wait 5 seconds for subconverter to start
 
@@ -116,11 +116,17 @@ jobs:
           # Check if subconverter process is running
           if ! pgrep -f ./subconverter > /dev/null; then
             echo "ERROR: subconverter process is not running before starting requests."
-            echo "--- Subconverter Log (if exists) ---"
-            if [ -f subconverter/subconverter.log ]; then
-                cat subconverter/subconverter.log
+            echo "--- Subconverter STDOUT Log (if exists) ---"
+            if [ -f subconverter/subconverter.stdout.log ]; then
+                cat subconverter/subconverter.stdout.log
             else
-                echo "Subconverter log file not found."
+                echo "Subconverter stdout log file not found."
+            fi
+            echo "--- Subconverter STDERR Log (if exists) ---"
+            if [ -f subconverter/subconverter.stderr.log ]; then
+                cat subconverter/subconverter.stderr.log
+            else
+                echo "Subconverter stderr log file not found."
             fi
             exit 1 # Exit if subconverter isn't running
           fi
@@ -169,11 +175,17 @@ jobs:
                 echo "Subscription conversion failed for target $target$suffix"
                 echo "Curl exit code: $curl_exit_code, HTTP code: $code"
                 echo "URL: $request_url"
-                echo "--- Subconverter Log ---"
-                if [ -f subconverter/subconverter.log ]; then
-                    cat subconverter/subconverter.log
+                echo "--- Subconverter STDOUT Log (if exists) ---"
+                if [ -f subconverter/subconverter.stdout.log ]; then
+                    cat subconverter/subconverter.stdout.log
                 else
-                    echo "Subconverter log file not found."
+                    echo "Subconverter stdout log file not found."
+                fi
+                echo "--- Subconverter STDERR Log (if exists) ---"
+                if [ -f subconverter/subconverter.stderr.log ]; then
+                    cat subconverter/subconverter.stderr.log
+                else
+                    echo "Subconverter stderr log file not found."
                 fi
                 echo "--- Curl Output (if any) ---"
                 if [ -f "$output_file" ]; then
