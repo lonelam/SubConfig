@@ -113,6 +113,18 @@ jobs:
 
       - name: update config
         run: |
+          # Check if subconverter process is running
+          if ! pgrep -f ./subconverter > /dev/null; then
+            echo "ERROR: subconverter process is not running before starting requests."
+            echo "--- Subconverter Log (if exists) ---"
+            if [ -f subconverter/subconverter.log ]; then
+                cat subconverter/subconverter.log
+            else
+                echo "Subconverter log file not found."
+            fi
+            exit 1 # Exit if subconverter isn't running
+          fi
+
           SUBSCRIBE_FILE=subscribe
           default_config="_SubConfig/subconverter.ini"
           params="emoji=true&list=false&fdn=false&sort=false&new_name=true"
