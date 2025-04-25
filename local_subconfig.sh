@@ -1,13 +1,18 @@
 #!/bin/bash
 # set -e
 
-# Enable debugging
-# set -x
-
 # Function to log messages with timestamp
 log_msg() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
+
+# Kill any existing subconverter processes
+log_msg "Attempting to kill existing subconverter processes..."
+pkill -f "./subconverter" || log_msg "No existing subconverter process found or failed to kill."
+
+sleep 1
+# Enable debugging
+# set -x
 
 # Check if GitHub token is set
 if [ -z "$GITHUB_TOKEN" ]; then
@@ -38,67 +43,82 @@ else
   echo 'tg://http?server=1.2.3.4&port=233&user=user&pass=pass&remarks=Example' > $SUBSCRIBE_FILE
 fi
 
-# Download and run subconverter
-log_msg "Downloading subconverter..."
-curl -v -s -L -o release -H "Authorization: Bearer $GITHUB_TOKEN" 'https://api.github.com/repos/lonelam/subconverter-rs/releases/latest'
-if [ $? -ne 0 ]; then
-  log_msg "API request failed"
-  cat release
-  exit 3
+# Download and run subconverter if directory doesn't exist
+if [ ! -d "subconverter" ]; then
+  log_msg "Subconverter directory not found, starting download and setup..."
+  log_msg "Downloading subconverter release info..."
+  curl -s -L -o release -H "Authorization: Bearer $GITHUB_TOKEN" 'https://api.github.com/repos/lonelam/subconverter-rs/releases/latest'
+  if [ $? -ne 0 ]; then
+    log_msg "API request failed"
+    cat release
+    exit 3
+  fi
+
+  log_msg "Parsing release information"
+  # Use startswith/endswith to find the correct asset regardless of version
+  DOWNLOAD_URL=$(cat release | jq -r '.assets[] | select(.name | startswith("subconverter-linux-amd64") and endswith(".tar.gz")) | .browser_download_url')
+  if [ -z "$DOWNLOAD_URL" ]; then
+    log_msg "ERROR: Failed to extract linux-amd64 download URL from API response"
+    log_msg "API Response:"
+    cat release
+    exit 3
+  fi
+  log_msg "Download URL: $DOWNLOAD_URL"
+
+  log_msg "Downloading subconverter tarball"
+  curl -v -s -L -O "$DOWNLOAD_URL"
+  if [ $? -ne 0 ]; then
+    log_msg "ERROR: Failed to download subconverter"
+    exit 3
+  fi
+
+  log_msg "Extracting subconverter"
+  # Extract the actual filename from the URL
+  FILENAME=$(basename "$DOWNLOAD_URL")
+  log_msg "Extracting $FILENAME"
+  tar -zxvf "$FILENAME"
+else
+  log_msg "Subconverter directory found, skipping download and extraction."
 fi
 
-log_msg "Parsing release information"
-# Use startswith/endswith to find the correct asset regardless of version
-DOWNLOAD_URL=$(cat release | jq -r '.assets[] | select(.name | startswith("subconverter-linux-amd64") and endswith(".tar.gz")) | .browser_download_url')
-if [ -z "$DOWNLOAD_URL" ]; then
-  log_msg "ERROR: Failed to extract linux-amd64 download URL from API response"
-  log_msg "API Response:"
-  cat release
-  exit 3
-fi
-log_msg "Download URL: $DOWNLOAD_URL"
-
-log_msg "Downloading subconverter tarball"
-curl -v -s -L -O "$DOWNLOAD_URL"
-if [ $? -ne 0 ]; then
-  log_msg "ERROR: Failed to download subconverter"
-  exit 3
-fi
-
-log_msg "Extracting subconverter"
-# Extract the actual filename from the URL
-FILENAME=$(basename "$DOWNLOAD_URL")
-log_msg "Extracting $FILENAME"
-tar -zxvf "$FILENAME"
+# Enter subconverter directory regardless of previous step
 cd subconverter
 log_msg "Configuring subconverter..."
+# Check for example files first
 for file in pref.example.ini pref.example.toml pref.example.yml; do
   if [ ! -f "$file" ]; then
-    log_msg "ERROR: $file not found!"
+    log_msg "ERROR: Example file $file not found in existing subconverter directory!"
     ls -la
+    # Optionally, attempt redownload or provide clearer instructions
     exit 3
   fi
 done
 
-# mv pref.example.ini pref.ini
-# mv pref.example.toml pref.toml
-# mv pref.example.yml pref.yml
+# Create config files from examples if they don't exist
+[ ! -f pref.ini ] && cp pref.example.ini pref.ini
+[ ! -f pref.toml ] && cp pref.example.toml pref.toml
+[ ! -f pref.yml ] && cp pref.example.yml pref.yml
+
+# Apply configuration changes
 sed -i 's/^base_path=.*/base_path=_SubConfig/' pref.ini
 sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
 sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
 log_msg "Running subconverter in background..."
-# ./subconverter >/dev/null 2>&1 &
-# SUBCONVERTER_PID=$!
-# log_msg "Subconverter started with PID: $SUBCONVERTER_PID"
+./subconverter > subconverter.stdout.log 2> subconverter.stderr.log &
+SUBCONVERTER_PID=$!
+log_msg "Subconverter started with PID: $SUBCONVERTER_PID"
 
 # Check if subconverter is running
-# sleep 2
-# if ! ps -p $SUBCONVERTER_PID > /dev/null; then
-#   log_msg "ERROR: Subconverter process died immediately"
-#   log_msg "Checking subconverter logs:"
-#   cat *.log 2>/dev/null || log_msg "No log files found"
-#   exit 4
-# fi
+log_msg "Waiting for subconverter to initialize..."
+sleep 1 # Give it a few seconds
+if ! ps -p $SUBCONVERTER_PID > /dev/null; then
+  log_msg "ERROR: Subconverter process $SUBCONVERTER_PID died immediately after start."
+  log_msg "--- Subconverter STDOUT Log ---"
+  cat subconverter.stdout.log 2>/dev/null || log_msg "(stdout log not found)"
+  log_msg "--- Subconverter STDERR Log ---"
+  cat subconverter.stderr.log 2>/dev/null || log_msg "(stderr log not found)"
+  exit 4
+fi
 
 cd ..
 
@@ -109,17 +129,20 @@ if [ ! -d "subconverter/_SubConfig" ]; then
 fi
 log_msg "Found SubConfig directory: subconverter/_SubConfig"
 
-# Cache external config
-log_msg "Downloading ACL4SSR..."
-curl -v -s -L -o "ACL4SSR.zip" "https://github.com/ACL4SSR/ACL4SSR/archive/refs/heads/master.zip"
-if [ $? -ne 0 ]; then
-  log_msg "ERROR: Failed to download ACL4SSR"
-  exit 6
-fi
+if [ ! -d "subconverter/_ACL4SSR" ]; then
 
-log_msg "Extracting ACL4SSR..."
-unzip -q ACL4SSR.zip
-mv "ACL4SSR-master" subconverter/_ACL4SSR
+# Cache external config
+  log_msg "Downloading ACL4SSR..."
+  curl -s -L -o "ACL4SSR.zip" "https://github.com/ACL4SSR/ACL4SSR/archive/refs/heads/master.zip"
+  if [ $? -ne 0 ]; then
+    log_msg "ERROR: Failed to download ACL4SSR"
+    exit 6
+  fi
+
+  log_msg "Extracting ACL4SSR..."
+  unzip -q ACL4SSR.zip
+  mv "ACL4SSR-master" subconverter/_ACL4SSR
+fi
 
 log_msg "Replacing configuration URLs..."
 function replace_url() {
@@ -173,25 +196,38 @@ log_msg "Constructing configuration requests"
 mkdir -p config
 for suffix in "" "-work"; do
   for target in "clash" "quan" "v2ray" "ssr" "surfboard" "singbox"; do
-    config=$(echo ${default_config/%.ini/${suffix}.ini} | jq -rR @uri)
-    log_msg "Requesting http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
-    code=$(curl -v -s -L -o config/$target$suffix -w '%{http_code}' "http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params")
-    log_msg "HTTP status code: $code"
-    if [[ "$code" != 200 && -s config/$target$suffix ]]; then
-      log_msg "Subscription conversion failed"
-      wc config/$target$suffix
-      cat config/$target$suffix
-      kill $SUBCONVERTER_PID
+    config_file_path="${default_config/%.ini/${suffix}.ini}"
+    config=$(echo "$config_file_path" | jq -rR @uri)
+    request_url="http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
+    output_file="config/$target$suffix"
+
+    log_msg "Requesting $target$suffix config (using $config_file_path)"
+    log_msg "URL: $request_url"
+
+    # Use || true to prevent exit, capture actual exit code in $?
+    code=$(curl -s -L -o "$output_file" -w '%{http_code}' "$request_url" || true)
+    curl_exit_code=$?
+
+    log_msg "Curl exit code: $curl_exit_code, HTTP status code: $code"
+
+    # Check both curl exit code and HTTP status code
+    if [[ "$code" != 200 || $curl_exit_code -ne 0 ]]; then
+      log_msg "ERROR: Subscription conversion failed for target $target$suffix"
+      log_msg "Curl Exit Code: $curl_exit_code, HTTP Status Code: $code"
+      log_msg "Failed URL: $request_url"
+      log_msg "--- Subconverter STDOUT Log ---"
+      cat subconverter/subconverter.stdout.log 2>/dev/null || log_msg "(stdout log not found)"
+      log_msg "--- Subconverter STDERR Log ---"
+      cat subconverter/subconverter.stderr.log 2>/dev/null || log_msg "(stderr log not found)"
+      log_msg "--- Curl Output File ($output_file) ---"
+      cat "$output_file" 2>/dev/null || log_msg "(output file empty or not found)"
+
+      log_msg "Stopping subconverter due to error..."
+      kill $SUBCONVERTER_PID 2>/dev/null
       exit 1
     fi
   done
 done
-
-# Check if subconverter is still running
-if ! ps -p $SUBCONVERTER_PID > /dev/null; then
-  log_msg "WARNING: Subconverter process died during execution"
-  # Continue anyway since we might have already generated configs
-fi
 
 # Compress config
 log_msg "Compressing configuration files..."
@@ -214,7 +250,7 @@ log_msg "Compressed archive available at config.tar.gz"
 
 # Clean up
 log_msg "Stopping subconverter..."
-kill $SUBCONVERTER_PID 2>/dev/null || log_msg "Subconverter process already stopped"
+kill $SUBCONVERTER_PID 2>/dev/null || log_msg "Subconverter process $SUBCONVERTER_PID already stopped"
 
 log_msg "Script execution completed"
 # Disable debugging

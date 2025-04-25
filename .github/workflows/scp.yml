@@ -23,6 +23,11 @@ on:
   watch:
     types: [started]
   workflow_dispatch:
+    inputs:
+      subconverter_url:
+        description: 'Optional URL for the subconverter tar.gz package'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -58,22 +63,33 @@ jobs:
       - name: run subconverter
         run: |
           echo 下载subconverter,
-          code=$(curl -s -L -o release -w '%{http_code}' -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" 'https://api.github.com/repos/lonelam/subconverter-rs/releases/latest')
-          if [[ "$code" != 200 ]]
-          then
-              echo api请求异常，
+          # Check if a specific URL is provided via workflow_dispatch input
+          if [ -n "${{ github.event.inputs.subconverter_url }}" ]; then
+            DOWNLOAD_URL="${{ github.event.inputs.subconverter_url }}"
+            echo "Using provided URL: $DOWNLOAD_URL"
+          else
+            echo "Fetching latest release URL from GitHub API..."
+            code=$(curl -s -L -o release -w '%{http_code}' -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" 'https://api.github.com/repos/lonelam/subconverter-rs/releases/latest')
+            if [[ "$code" != 200 ]]
+            then
+                echo api请求异常，
+                cat release
+                exit 3
+            fi
+            DOWNLOAD_URL=$(cat release | jq -r '.assets[] | select(.name | startswith("subconverter-linux-amd64") and endswith(".tar.gz")) | .browser_download_url')
+            if [ -z "$DOWNLOAD_URL" ]; then
+              echo "ERROR: Could not find linux-amd64 download URL in release assets."
               cat release
-              exit 3
+              exit 4
+            fi
+            echo "Latest release URL: $DOWNLOAD_URL"
           fi
-          DOWNLOAD_URL=$(cat release | jq -r '.assets[] | select(.name | startswith("subconverter-linux-amd64") and endswith(".tar.gz")) | .browser_download_url')
-          if [ -z "$DOWNLOAD_URL" ]; then
-            echo "ERROR: Could not find linux-amd64 download URL in release assets."
-            cat release
-            exit 4
-          fi
+
           echo "Downloading from $DOWNLOAD_URL"
           curl -s -L -O "$DOWNLOAD_URL"
           FILENAME=$(basename "$DOWNLOAD_URL")
+          # Handle potential query parameters or fragments in the URL for basename
+          FILENAME=$(echo "$FILENAME" | sed 's/[?#].*//') 
           echo "Extracting $FILENAME"
           tar -zxf "$FILENAME"
           cd subconverter
