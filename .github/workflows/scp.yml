@@ -149,7 +149,7 @@ jobs:
               request_url="http://127.0.0.1:25500/sub?target=$target&url=$url&config=$config&$params"
               output_file="config/$target$suffix"
               echo "Requesting $request_url"
-              code=$(curl -s -L -o "$output_file" -w '%{http_code}' "$request_url")
+              code=$(curl -s -L -o "$output_file" -w '%{http_code}' "$request_url" || true)
               curl_exit_code=$?
               echo "Curl exited with code: $curl_exit_code, HTTP code received: $code"
 
