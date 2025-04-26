@@ -235,7 +235,8 @@ jobs:
               echo "Curl exited with code: $curl_exit_code, HTTP code received: $code"
 
               if [[ "$code" != 200 || $curl_exit_code -ne 0 ]]; then
-                echo "Subscription conversion failed for target $target$suffix"
+                echo "Subscription conversion failed for target $target$suffix, sleep 10 seconds"
+                sleep 10
                 echo "Curl exit code: $curl_exit_code, HTTP code: $code"
                 echo "URL: $request_url"
                 echo "--- Subconverter STDOUT Log (if exists) ---"
