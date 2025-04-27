@@ -42,9 +42,9 @@ jobs:
       - name: prepare
         run: |
           SUBSCRIBE_FILE=subscribe
-          if test "x${{ secrets.subscribe }}" != "x"
+          if test "x${{ secrets.SUBSCRIBE }}" != "x"
           then
-              echo "${{ secrets.subscribe }}" > $SUBSCRIBE_FILE
+              echo "${{ secrets.SUBSCRIBE }}" > $SUBSCRIBE_FILE
           fi
 
           echo 发布到指定地址，

@@ -1,14 +1,25 @@
 #!/bin/bash
 # set -e
 
+# Default: Run subconverter in background
+RUN_SUBCONVERTER_BACKGROUND=true
+
+# Check for -d argument
+if [[ " $* " == *" -d "* ]]; then
+  RUN_SUBCONVERTER_BACKGROUND=false
+  echo "Argument -d detected: Subconverter background process management disabled."
+fi
+
 # Function to log messages with timestamp
 log_msg() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
-# Kill any existing subconverter processes
-log_msg "Attempting to kill existing subconverter processes..."
-pkill -f "./subconverter" || log_msg "No existing subconverter process found or failed to kill."
+# Kill any existing subconverter processes only if managing background process
+if [ "$RUN_SUBCONVERTER_BACKGROUND" = true ]; then
+  log_msg "Attempting to kill existing subconverter processes..."
+  pkill -f "./subconverter" || log_msg "No existing subconverter process found or failed to kill."
+fi
 
 sleep 1
 # Enable debugging
@@ -103,21 +114,26 @@ done
 sed -i 's/^base_path=.*/base_path=_SubConfig/' pref.ini
 sed -i 's/^base_path = ".*"/base_path = "_SubConfig"/' pref.toml
 sed -i 's/base_path: .*/base_path: _SubConfig/' pref.yml
-log_msg "Running subconverter in background..."
-./subconverter > subconverter.stdout.log 2> subconverter.stderr.log &
-SUBCONVERTER_PID=$!
-log_msg "Subconverter started with PID: $SUBCONVERTER_PID"
 
-# Check if subconverter is running
-log_msg "Waiting for subconverter to initialize..."
-sleep 1 # Give it a few seconds
-if ! ps -p $SUBCONVERTER_PID > /dev/null; then
-  log_msg "ERROR: Subconverter process $SUBCONVERTER_PID died immediately after start."
-  log_msg "--- Subconverter STDOUT Log ---"
-  cat subconverter.stdout.log 2>/dev/null || log_msg "(stdout log not found)"
-  log_msg "--- Subconverter STDERR Log ---"
-  cat subconverter.stderr.log 2>/dev/null || log_msg "(stderr log not found)"
-  exit 4
+if [ "$RUN_SUBCONVERTER_BACKGROUND" = true ]; then
+  log_msg "Running subconverter in background..."
+  ./subconverter > subconverter.stdout.log 2> subconverter.stderr.log &
+  SUBCONVERTER_PID=$!
+  log_msg "Subconverter started with PID: $SUBCONVERTER_PID"
+
+  # Check if subconverter is running
+  log_msg "Waiting for subconverter to initialize..."
+  sleep 1 # Give it a few seconds
+  if ! ps -p $SUBCONVERTER_PID > /dev/null; then
+    log_msg "ERROR: Subconverter process $SUBCONVERTER_PID died immediately after start."
+    log_msg "--- Subconverter STDOUT Log ---"
+    cat subconverter.stdout.log 2>/dev/null || log_msg "(stdout log not found)"
+    log_msg "--- Subconverter STDERR Log ---"
+    cat subconverter.stderr.log 2>/dev/null || log_msg "(stderr log not found)"
+    exit 4
+  fi
+else
+    log_msg "Skipping background subconverter start due to -d flag."
 fi
 
 cd ..
@@ -179,7 +195,9 @@ cat subscribe.json | jq -r '
 
 if [ $? != 0 ]; then
   log_msg "Subscription download failed"
-  kill $SUBCONVERTER_PID
+  if [ "$RUN_SUBCONVERTER_BACKGROUND" = true ]; then
+    kill $SUBCONVERTER_PID
+  fi
   exit 2
 fi
 
@@ -222,8 +240,10 @@ for suffix in "" "-work"; do
       log_msg "--- Curl Output File ($output_file) ---"
       cat "$output_file" 2>/dev/null || log_msg "(output file empty or not found)"
 
-      log_msg "Stopping subconverter due to error..."
-      kill $SUBCONVERTER_PID 2>/dev/null
+      if [ "$RUN_SUBCONVERTER_BACKGROUND" = true ]; then
+        log_msg "Stopping subconverter due to error..."
+        kill $SUBCONVERTER_PID 2>/dev/null
+      fi
       exit 1
     fi
   done
@@ -249,8 +269,10 @@ log_msg "Compressed archive available at config.tar.gz"
 # fi
 
 # Clean up
-log_msg "Stopping subconverter..."
-kill $SUBCONVERTER_PID 2>/dev/null || log_msg "Subconverter process $SUBCONVERTER_PID already stopped"
+if [ "$RUN_SUBCONVERTER_BACKGROUND" = true ]; then
+  log_msg "Stopping subconverter..."
+  kill $SUBCONVERTER_PID 2>/dev/null || log_msg "Subconverter process $SUBCONVERTER_PID already stopped"
+fi
 
 log_msg "Script execution completed"
 # Disable debugging
