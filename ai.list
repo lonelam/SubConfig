@@ -1,13 +1,19 @@
-# AI Services Configuration
-# Last updated: 2025-04-07
+# AI Services - 国外平台
+# Last updated: 2026-05-23
+# Merged: legacy ai.list + AI平台-国外
 
-# OpenAI
+# --- Keywords ---
+DOMAIN-KEYWORD,anthropic
+DOMAIN-KEYWORD,claude
 DOMAIN-KEYWORD,openai
+
+# --- OpenAI ---
 DOMAIN-SUFFIX,openai.com
 DOMAIN-SUFFIX,chatgpt.com
 DOMAIN-SUFFIX,oaistatic.com
 DOMAIN-SUFFIX,oaiusercontent.com
 DOMAIN-SUFFIX,openaiapi-site.azureedge.net
+DOMAIN-SUFFIX,sora.com
 
 # OpenAI Dependencies
 DOMAIN-SUFFIX,auth0.com
@@ -22,24 +28,56 @@ DOMAIN-SUFFIX,sentry.io
 DOMAIN-SUFFIX,stripe.com
 DOMAIN-SUFFIX,webpubsub.azure.com
 
-# Google AI
+# --- Google AI ---
+DOMAIN,ai.google.dev
+DOMAIN,aistudio.google.com
+DOMAIN,bard.google.com
+DOMAIN,gemini.google.com
+DOMAIN,generativelanguage.googleapis.com
+DOMAIN,notebooklm.google.com
 DOMAIN-SUFFIX,bard.google.com
 DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,makersuite.google.com
+DOMAIN-SUFFIX,notebooklm.google
+DOMAIN-SUFFIX,notebooklm.google.com
 
-# JetBrains AI
-DOMAIN-KEYWORD,grazie.aws.intellij.net
-DOMAIN-KEYWORD,grazie.ai
-DOMAIN,api.app.prod.grazie.aws.intellij.net
-DOMAIN,api.jetbrains.ai
-
-# Anthropic (Claude)
+# --- Anthropic (Claude) ---
 DOMAIN,cdn.usefathom.com
 DOMAIN-SUFFIX,anthropic.com
 DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,claude.com
+DOMAIN-SUFFIX,claudeusercontent.com
 
-# Microsoft AI
+# --- Microsoft / Copilot ---
+DOMAIN,api.githubcopilot.com
+DOMAIN,copilot-proxy.githubusercontent.com
+DOMAIN,sydney.bing.com
+DOMAIN-SUFFIX,ai.azure.com
 DOMAIN-SUFFIX,bing.com
+DOMAIN-SUFFIX,copilot.cloud.microsoft
 DOMAIN-SUFFIX,copilot.microsoft.com
 
-# Testing
+# --- JetBrains / Grazie ---
+DOMAIN-KEYWORD,grazie.ai
+DOMAIN-KEYWORD,grazie.aws.intellij.net
+DOMAIN,api.app.prod.grazie.aws.intellij.net
+DOMAIN,api.jetbrains.ai
+DOMAIN-SUFFIX,grazie.ai
+DOMAIN-SUFFIX,grazie.aws.intellij.net
+DOMAIN-SUFFIX,jetbrains.ai
+
+# --- Cursor ---
+DOMAIN-SUFFIX,cursor.com
+DOMAIN-SUFFIX,cursor.sh
+
+# --- Other AI Platforms ---
+DOMAIN,api.groq.com
+DOMAIN,api.together.xyz
+DOMAIN,console.groq.com
+DOMAIN-SUFFIX,mistral.ai
+DOMAIN-SUFFIX,meta.ai
+DOMAIN-SUFFIX,perplexity.ai
+DOMAIN-SUFFIX,x.ai
+
+# --- Testing ---
 DOMAIN-SUFFIX,ip138.com
