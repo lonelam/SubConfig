@@ -1,36 +1,13 @@
-name: CI for SCP Upload
+name: CI for SCP Upload (Disabled)
 env:
   TZ: Asia/Shanghai
 
 on:
-  push:
-    tags:
-      - "*"
-    branches:
-      - main
-      - test
-    paths-ignore:
-      - ".github/workflows/*"
-      - "!.github/workflows/subconverter.yml"
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - ".github/workflows/*"
-      - "!.github/workflows/subconverter.yml"
-  schedule:
-    - cron: "0 8 * * *"
-  watch:
-    types: [started]
   workflow_dispatch:
-    inputs:
-      subconverter_url:
-        description: 'Optional URL for the subconverter tar.gz package'
-        required: false
-        default: ''
 
 jobs:
   build:
+    if: ${{ false }}
     runs-on: ubuntu-latest
 
     steps:

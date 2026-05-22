@@ -1,0 +1,87 @@
+name: Build and Deploy Mihomo Config
+
+env:
+  TZ: Asia/Shanghai
+
+on:
+  push:
+    branches:
+      - main
+      - test
+    paths:
+      - "mihomo/**"
+      - "*.list"
+      - ".github/workflows/mihomo.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read subscribe URL from secret
+        env:
+          SUBSCRIBE: ${{ secrets.SUBSCRIBE }}
+        run: |
+          if [ -z "$SUBSCRIBE" ]; then
+            echo "ERROR: GitHub Secret SUBSCRIBE is empty."
+            exit 1
+          fi
+
+          SUB_URL=$(printf '%s\n' "$SUBSCRIBE" | sed '/^[[:space:]]*$/d' | head -n 1)
+          if [ -z "$SUB_URL" ]; then
+            echo "ERROR: No valid subscribe URL found in SUBSCRIBE."
+            exit 1
+          fi
+
+          echo "::add-mask::$SUB_URL"
+          echo "SUBSCRIBE_URL=$SUB_URL" >> "$GITHUB_ENV"
+
+      - name: Render release config from template
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          src = Path("mihomo/config.yaml")
+          dst = Path("mihomo/config.release.yaml")
+          token = "__SUBSCRIBE_URL__"
+          sub_url = os.environ["SUBSCRIBE_URL"]
+
+          content = src.read_text(encoding="utf-8")
+          if token not in content:
+              raise SystemExit(f"placeholder {token} not found in {src}")
+
+          dst.write_text(content.replace(token, sub_url), encoding="utf-8")
+          print(f"Rendered {dst}")
+          PY
+
+      - name: Package config
+        run: |
+          mkdir -p config
+          cp mihomo/config.release.yaml config/clash.yaml
+          tar -zcf config.tar.gz -C config .
+
+      - name: Copy SSH key
+        if: ${{ secrets.SCP_KEY != '' && secrets.HOST != '' && secrets.PORT != '' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SCP_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy config via SCP
+        if: ${{ secrets.SCP_KEY != '' && secrets.HOST != '' && secrets.PORT != '' }}
+        run: |
+          scp -o StrictHostKeyChecking=no -P "${{ secrets.PORT }}" -r ./config.tar.gz "www@${{ secrets.HOST }}:/www/private/"
+          ssh -o StrictHostKeyChecking=no -p "${{ secrets.PORT }}" "www@${{ secrets.HOST }}" "tar -zxf /www/private/config.tar.gz -C /www/private/"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mihomo-config
+          path: config.tar.gz
