@@ -430,8 +430,8 @@ proxy-groups:
   - name: 💬 Ai应用
     type: select
     proxies:
-      - 🚀 节点选择
       - 🇸🇬 狮城节点
+      - 🚀 节点选择
       - 🇺🇲 美国节点
       - 🇯🇵 日本节点
 
@@ -496,13 +496,6 @@ proxy-groups:
       - 🚀 节点选择
       - 🎯 全球直连
 
-  - name: 🤖 OpenAI
-    type: select
-    proxies:
-      - 🚀 节点选择
-      - 🇸🇬 狮城节点
-      - 🇺🇲 美国节点
-
   - name: 🖼️ Imgur
     type: select
     proxies:
@@ -546,8 +539,8 @@ rules:
   - RULE-SET,xbox,Ⓜ️ 微软服务
   - RULE-SET,apple,🍎 苹果服务
   - RULE-SET,telegram,📲 电报消息
-  - RULE-SET,openai,🤖 OpenAI
-  - RULE-SET,gemini,🤖 OpenAI
+  - RULE-SET,openai,💬 Ai应用
+  - RULE-SET,gemini,💬 Ai应用
   - RULE-SET,ai,💬 Ai应用
   - RULE-SET,netease-music,🎶 网易音乐
   - RULE-SET,epic,🎮 游戏平台
