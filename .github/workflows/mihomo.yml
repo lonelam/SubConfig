@@ -67,18 +67,23 @@ jobs:
           cp mihomo/config.release.yaml config/clash.yaml
           tar -zcf config.tar.gz -C config .
 
-      - name: Copy SSH key
-        if: ${{ secrets.SCP_KEY != '' && secrets.HOST != '' && secrets.PORT != '' }}
+      - name: Deploy config via SCP
+        env:
+          SCP_KEY: ${{ secrets.SCP_KEY }}
+          HOST: ${{ secrets.HOST }}
+          PORT: ${{ secrets.PORT }}
         run: |
+          if [ -z "$SCP_KEY" ] || [ -z "$HOST" ] || [ -z "$PORT" ]; then
+            echo "Deploy secrets not configured (SCP_KEY/HOST/PORT), skipping deployment."
+            exit 0
+          fi
+
           mkdir -p ~/.ssh
-          echo "${{ secrets.SCP_KEY }}" > ~/.ssh/id_rsa
+          echo "$SCP_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Deploy config via SCP
-        if: ${{ secrets.SCP_KEY != '' && secrets.HOST != '' && secrets.PORT != '' }}
-        run: |
-          scp -o StrictHostKeyChecking=no -P "${{ secrets.PORT }}" -r ./config.tar.gz "www@${{ secrets.HOST }}:/www/private/"
-          ssh -o StrictHostKeyChecking=no -p "${{ secrets.PORT }}" "www@${{ secrets.HOST }}" "tar -zxf /www/private/config.tar.gz -C /www/private/"
+          scp -o StrictHostKeyChecking=no -P "$PORT" -r ./config.tar.gz "www@${HOST}:/www/private/"
+          ssh -o StrictHostKeyChecking=no -p "$PORT" "www@${HOST}" "tar -zxf /www/private/config.tar.gz -C /www/private/"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
