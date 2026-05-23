@@ -359,6 +359,20 @@ proxy-groups:
     interval: 300
     tolerance: 50
 
+  - name: 🛟 节点容灾
+    type: fallback
+    proxies:
+      - 🚀 节点选择
+      - ♻️ 自动选择
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+      - 🇸🇬 狮城节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇰🇷 韩国节点
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+
   - name: 🇭🇰 香港节点
     type: url-test
     use:
@@ -417,14 +431,14 @@ proxy-groups:
     type: select
     proxies:
       - DIRECT
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 🔒 隐私保护
     type: select
     proxies:
       - DIRECT
       - REJECT
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 🛑 广告拦截
     type: select
@@ -442,30 +456,30 @@ proxy-groups:
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: Ⓜ️ 微软云盘
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: Ⓜ️ 微软服务
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 🍎 苹果服务
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 📲 电报消息
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇸🇬 狮城节点
       - 🇭🇰 香港节点
       - 🇺🇲 美国节点
@@ -474,7 +488,7 @@ proxy-groups:
     type: select
     proxies:
       - 🇸🇬 狮城节点
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇺🇲 美国节点
       - 🇯🇵 日本节点
 
@@ -482,18 +496,18 @@ proxy-groups:
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 🎮 游戏平台
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 📹 油管视频
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇸🇬 狮城节点
       - 🇭🇰 香港节点
       - 🇺🇲 美国节点
@@ -501,7 +515,7 @@ proxy-groups:
   - name: 🎥 奈飞视频
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇸🇬 狮城节点
       - 🇭🇰 香港节点
       - 🇺🇲 美国节点
@@ -510,7 +524,7 @@ proxy-groups:
     type: select
     proxies:
       - 🇨🇳 台湾节点
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 📺 哔哩哔哩
     type: select
@@ -523,12 +537,12 @@ proxy-groups:
     type: select
     proxies:
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 🌍 国外媒体
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇸🇬 狮城节点
       - 🇭🇰 香港节点
       - 🇺🇲 美国节点
@@ -536,19 +550,19 @@ proxy-groups:
   - name: 🐙 GITHUB
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🎯 全球直连
 
   - name: 🖼️ Imgur
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇺🇲 美国节点
 
   - name: 🎬 EMBY
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - 🇸🇬 狮城节点
       - 🇭🇰 香港节点
 
@@ -557,12 +571,12 @@ proxy-groups:
     proxies:
       - DIRECT
       - 🎯 全球直连
-      - 🚀 节点选择
+      - 🛟 节点容灾
 
   - name: 🐟 漏网之鱼
     type: select
     proxies:
-      - 🚀 节点选择
+      - 🛟 节点容灾
       - ♻️ 自动选择
       - DIRECT
 
@@ -600,13 +614,13 @@ rules:
   - RULE-SET,imgur,🖼️ Imgur
   - RULE-SET,github,🐙 GITHUB
   - RULE-SET,home,🏠 HOME
-  - RULE-SET,steam-proxy,🚀 节点选择
+  - RULE-SET,steam-proxy,🛟 节点容灾
   - RULE-SET,steam-direct,🎯 全球直连
   - RULE-SET,ubisoft-direct,🎯 全球直连
   - RULE-SET,china-media,🌏 国内媒体
   - RULE-SET,proxy-media,🌍 国外媒体
-  - RULE-SET,proxy-lite,🚀 节点选择
-  - RULE-SET,proxy-gfw,🚀 节点选择
+  - RULE-SET,proxy-lite,🛟 节点容灾
+  - RULE-SET,proxy-gfw,🛟 节点容灾
   - RULE-SET,china-domain,🎯 全球直连
   - RULE-SET,china-company-ip,🎯 全球直连
   - RULE-SET,download,🎯 全球直连
