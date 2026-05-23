@@ -34,258 +34,301 @@ rule-providers:
   reqable:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/lonelam/SubConfig/raw/main/reqable.list"
     path: ./ruleset/reqable.yaml
     interval: 86400
   direct:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/lonelam/SubConfig/raw/main/direct.list"
     path: ./ruleset/direct.yaml
     interval: 86400
   privacy:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/lonelam/SubConfig/raw/main/privacy.list"
     path: ./ruleset/privacy.yaml
     interval: 86400
   local-area-network:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list"
     path: ./ruleset/local-area-network.yaml
     interval: 86400
   unban:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/UnBan.list"
     path: ./ruleset/unban.yaml
     interval: 86400
   ban-ad:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list"
     path: ./ruleset/ban-ad.yaml
     interval: 86400
   ban-program-ad:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanProgramAD.list"
     path: ./ruleset/ban-program-ad.yaml
     interval: 86400
   google-fcm:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/GoogleFCM.list"
     path: ./ruleset/google-fcm.yaml
     interval: 86400
   google-cn:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/lonelam/SubConfig/main/GoogleCN.list"
     path: ./ruleset/google-cn.yaml
     interval: 86400
   steam-cn:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/SteamCN.list"
     path: ./ruleset/steam-cn.yaml
     interval: 86400
   onedrive:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/OneDrive.list"
     path: ./ruleset/onedrive.yaml
     interval: 86400
   microsoft:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Microsoft.list"
     path: ./ruleset/microsoft.yaml
     interval: 86400
   apple:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list"
     path: ./ruleset/apple.yaml
     interval: 86400
   telegram:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Telegram.list"
     path: ./ruleset/telegram.yaml
     interval: 86400
   ai:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/lonelam/SubConfig/main/ai.list"
     path: ./ruleset/ai.yaml
     interval: 86400
   netease-music:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/NetEaseMusic.list"
     path: ./ruleset/netease-music.yaml
     interval: 86400
   epic:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Epic.list"
     path: ./ruleset/epic.yaml
     interval: 86400
   origin:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Origin.list"
     path: ./ruleset/origin.yaml
     interval: 86400
   sony:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Sony.list"
     path: ./ruleset/sony.yaml
     interval: 86400
   steam:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Steam.list"
     path: ./ruleset/steam.yaml
     interval: 86400
   nintendo:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Nintendo.list"
     path: ./ruleset/nintendo.yaml
     interval: 86400
   youtube:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/YouTube.list"
     path: ./ruleset/youtube.yaml
     interval: 86400
   netflix:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Netflix.list"
     path: ./ruleset/netflix.yaml
     interval: 86400
   bahamut:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bahamut.list"
     path: ./ruleset/bahamut.yaml
     interval: 86400
   bilibili-hmt:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/BilibiliHMT.list"
     path: ./ruleset/bilibili-hmt.yaml
     interval: 86400
   bilibili:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bilibili.list"
     path: ./ruleset/bilibili.yaml
     interval: 86400
   china-media:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaMedia.list"
     path: ./ruleset/china-media.yaml
     interval: 86400
   proxy-media:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyMedia.list"
     path: ./ruleset/proxy-media.yaml
     interval: 86400
   proxy-gfw:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/lonelam/ACL4SSR/master/Clash/ProxyGFWlist.list"
     path: ./ruleset/proxy-gfw.yaml
     interval: 86400
   china-domain:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list"
     path: ./ruleset/china-domain.yaml
     interval: 86400
   china-company-ip:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaCompanyIp.list"
     path: ./ruleset/china-company-ip.yaml
     interval: 86400
   download:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list"
     path: ./ruleset/download.yaml
     interval: 86400
   home:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/home.list"
     path: ./ruleset/home.yaml
     interval: 86400
   steam-proxy:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/steam-proxy.list"
     path: ./ruleset/steam-proxy.yaml
     interval: 86400
   steam-direct:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/steam-direct.list"
     path: ./ruleset/steam-direct.yaml
     interval: 86400
   ubisoft-direct:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/ubisoft-direct.list"
     path: ./ruleset/ubisoft-direct.yaml
     interval: 86400
   github:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/github.list"
     path: ./ruleset/github.yaml
     interval: 86400
   openai:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/openAi.list"
     path: ./ruleset/openai.yaml
     interval: 86400
   gemini:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/refs/heads/master/Clash/Ruleset/Gemini.list"
     path: ./ruleset/gemini.yaml
     interval: 86400
   imgur:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/imgur.list"
     path: ./ruleset/imgur.yaml
     interval: 86400
   emby:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/AoEiuV020/SubConfig/raw/main/emby.list"
     path: ./ruleset/emby.yaml
     interval: 86400
   xbox:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/Ruleset/Xbox.list"
     path: ./ruleset/xbox.yaml
     interval: 86400
   proxy-lite:
     type: http
     behavior: classical
+    format: text
     url: "https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/ProxyLite.list"
     path: ./ruleset/proxy-lite.yaml
     interval: 86400
