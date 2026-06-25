@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Read subscribe URL from secret
+      - name: Parse subscribe URLs from secret
         env:
           SUBSCRIBE: ${{ secrets.SUBSCRIBE }}
         run: |
@@ -33,32 +33,76 @@ jobs:
             exit 1
           fi
 
-          SUB_URL=$(printf '%s\n' "$SUBSCRIBE" | sed '/^[[:space:]]*$/d' | head -n 1)
-          if [ -z "$SUB_URL" ]; then
-            echo "ERROR: No valid subscribe URL found in SUBSCRIBE."
-            exit 1
-          fi
-
-          echo "::add-mask::$SUB_URL"
-          echo "SUBSCRIBE_URL=$SUB_URL" >> "$GITHUB_ENV"
+          printf '%s\n' "$SUBSCRIBE" > subscribe.txt
 
       - name: Render release config from template
+        env:
+          SUBSCRIBE: ${{ secrets.SUBSCRIBE }}
         run: |
           python3 - <<'PY'
           import os
+          import re
           from pathlib import Path
 
           src = Path("mihomo/config.yaml")
           dst = Path("mihomo/config.release.yaml")
-          token = "__SUBSCRIBE_URL__"
-          sub_url = os.environ["SUBSCRIBE_URL"]
+          placeholder = "__PROXY_PROVIDERS__"
+          exclude_filter = "(跳转域名|到期|请先购买|剩余流量|时间|官网|产品|平台|每月刷新|一元机场.ink|管人痴|下次重置剩余)"
+
+          def parse_subscribe_urls(text: str) -> list[str]:
+              urls: list[str] = []
+              skipped: list[str] = []
+              for raw in text.splitlines():
+                  line = raw.strip()
+                  if not line:
+                      continue
+                  if re.match(r"^https?://", line, re.I):
+                      urls.append(line)
+                  else:
+                      skipped.append(line)
+              if skipped:
+                  print("Skipped non-http lines (mihomo proxy-providers only support http subscriptions):")
+                  for item in skipped:
+                      print(f"  - {item[:80]}{'...' if len(item) > 80 else ''}")
+              return urls
+
+          def provider_name(index: int, total: int) -> str:
+              if total == 1:
+                  return "airport"
+              return f"airport-{index}"
+
+          def render_provider(name: str, url: str) -> str:
+              return f"""  {name}:
+    type: http
+    url: {url!r}
+    path: ./providers/{name}.yaml
+    interval: 3600
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+    exclude-filter: {exclude_filter!r}"""
+
+          subscribe = os.environ.get("SUBSCRIBE", "")
+          urls = parse_subscribe_urls(subscribe)
+          if not urls:
+              raise SystemExit("No valid http(s) subscribe URL found in SUBSCRIBE.")
+
+          for url in urls:
+              print(f"::add-mask::{url}")
+
+          providers = [
+              render_provider(provider_name(i, len(urls)), url)
+              for i, url in enumerate(urls, start=1)
+          ]
+          providers_block = "\n".join(providers)
 
           content = src.read_text(encoding="utf-8")
-          if token not in content:
-              raise SystemExit(f"placeholder {token} not found in {src}")
+          if placeholder not in content:
+              raise SystemExit(f"placeholder {placeholder} not found in {src}")
 
-          dst.write_text(content.replace(token, sub_url), encoding="utf-8")
-          print(f"Rendered {dst}")
+          dst.write_text(content.replace(placeholder, providers_block), encoding="utf-8")
+          print(f"Rendered {dst} with {len(urls)} proxy-provider(s): {', '.join(provider_name(i, len(urls)) for i in range(1, len(urls) + 1))}")
           PY
 
       - name: Package config
