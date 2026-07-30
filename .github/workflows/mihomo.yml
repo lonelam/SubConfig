@@ -24,29 +24,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Parse subscribe URLs from secret
+      - name: Configure SSH access to server
         env:
-          SUBSCRIBE: ${{ secrets.SUBSCRIBE }}
+          SCP_KEY: ${{ secrets.SCP_KEY }}
+          HOST: ${{ secrets.HOST }}
+          PORT: ${{ secrets.PORT }}
         run: |
-          if [ -z "$SUBSCRIBE" ]; then
-            echo "ERROR: GitHub Secret SUBSCRIBE is empty."
+          if [ -z "$SCP_KEY" ] || [ -z "$HOST" ] || [ -z "$PORT" ]; then
+            echo "ERROR: secrets.SCP_KEY, secrets.HOST and secrets.PORT are all required."
+            echo "Subscribe URLs and self-hosted proxies are read from your own server instead of GitHub Secrets, so SSH access is mandatory."
             exit 1
           fi
 
-          printf '%s\n' "$SUBSCRIBE" > subscribe.txt
+          mkdir -p ~/.ssh
+          echo "$SCP_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Fetch subscribe & self-hosted proxy config from server
+        env:
+          HOST: ${{ secrets.HOST }}
+          PORT: ${{ secrets.PORT }}
+          SECRETS_PATH: ${{ secrets.SECRETS_PATH }}
+        run: |
+          REMOTE_DIR="${SECRETS_PATH:-/www/private/secrets}"
+          echo "Fetching config from www@${HOST}:${REMOTE_DIR} ..."
+
+          ssh -o StrictHostKeyChecking=no -p "$PORT" "www@${HOST}" \
+            "cat '${REMOTE_DIR}/subscribe.txt' 2>/dev/null || true" > subscribe.txt
+
+          if [ ! -s subscribe.txt ]; then
+            echo "ERROR: ${REMOTE_DIR}/subscribe.txt is missing or empty on the server."
+            echo "Run 'python3 manage_secrets.py' locally to configure it, then re-run this workflow."
+            exit 1
+          fi
+
+          ssh -o StrictHostKeyChecking=no -p "$PORT" "www@${HOST}" \
+            "cat '${REMOTE_DIR}/self-hosted-proxies.yaml' 2>/dev/null || true" > self-hosted-proxies.yaml
 
       - name: Render release config from template
-        env:
-          SUBSCRIBE: ${{ secrets.SUBSCRIBE }}
         run: |
+          pip install --quiet pyyaml
           python3 - <<'PY'
-          import os
           import re
           from pathlib import Path
+
+          import yaml
 
           src = Path("mihomo/config.yaml")
           dst = Path("mihomo/config.release.yaml")
           placeholder = "__PROXY_PROVIDERS__"
+          self_hosted_placeholder = "__SELF_HOSTED_PROXY__"
           exclude_filter = "(跳转域名|到期|请先购买|剩余流量|时间|官网|产品|平台|每月刷新|一元机场.ink|管人痴|下次重置剩余)"
 
           def parse_subscribe_urls(text: str) -> list[str]:
@@ -86,10 +113,70 @@ jobs:
               ]
               return "\n".join(lines)
 
-          subscribe = os.environ.get("SUBSCRIBE", "")
+          # Fields that are safe to print in build logs unmasked (structural, not secret).
+          SAFE_KEYS = {
+              "name", "type", "network", "flow", "tls", "udp", "xudp",
+              "client-fingerprint", "packet-encoding", "alpn", "skip-cert-verify",
+              "support-x25519mlkem768", "smux", "enabled",
+          }
+
+          def mask_secret_values(node) -> None:
+              if isinstance(node, dict):
+                  for key, value in node.items():
+                      if isinstance(value, (dict, list)):
+                          mask_secret_values(value)
+                      elif key not in SAFE_KEYS and value not in (None, ""):
+                          print(f"::add-mask::{value}")
+              elif isinstance(node, list):
+                  for item in node:
+                      mask_secret_values(item)
+
+          def render_self_hosted_provider() -> str:
+              proxies_file = Path("self-hosted-proxies.yaml")
+              raw = proxies_file.read_text(encoding="utf-8").strip() if proxies_file.exists() else ""
+              if not raw:
+                  print("self-hosted-proxies.yaml is empty or missing on the server, skipping self-hosted proxy provider.")
+                  return ""
+
+              try:
+                  proxies = yaml.safe_load(raw)
+              except yaml.YAMLError as exc:
+                  raise SystemExit(f"self-hosted-proxies.yaml is not valid YAML: {exc}")
+
+              if not isinstance(proxies, list) or not proxies:
+                  raise SystemExit(
+                      "self-hosted-proxies.yaml must be a YAML list of proxy entries, "
+                      "e.g. the same items you would put under a config's `proxies:` key."
+                  )
+              for proxy in proxies:
+                  if not isinstance(proxy, dict) or not proxy.get("name") or not proxy.get("type"):
+                      raise SystemExit("Each entry in self-hosted-proxies.yaml needs at least `name` and `type`.")
+
+              mask_secret_values(proxies)
+
+              payload_yaml = yaml.dump(
+                  proxies, allow_unicode=True, sort_keys=False, default_flow_style=False
+              )
+              indented_payload = "\n".join(
+                  f"      {line}" if line else line for line in payload_yaml.splitlines()
+              )
+
+              lines = [
+                  "  self-hosted:",
+                  "    type: inline",
+                  "    health-check:",
+                  "      enable: true",
+                  "      url: http://www.gstatic.com/generate_204",
+                  "      interval: 300",
+                  "    payload:",
+                  indented_payload,
+              ]
+              return "\n".join(lines)
+
+          subscribe = Path("subscribe.txt").read_text(encoding="utf-8")
           urls = parse_subscribe_urls(subscribe)
           if not urls:
-              raise SystemExit("No valid http(s) subscribe URL found in SUBSCRIBE.")
+              raise SystemExit("No valid http(s) subscribe URL found in subscribe.txt fetched from the server.")
 
           for url in urls:
               print(f"::add-mask::{url}")
@@ -100,12 +187,21 @@ jobs:
           ]
           providers_block = "\n".join(providers)
 
+          self_hosted_block = render_self_hosted_provider()
+
           content = src.read_text(encoding="utf-8")
           if placeholder not in content:
               raise SystemExit(f"placeholder {placeholder} not found in {src}")
+          if self_hosted_placeholder not in content:
+              raise SystemExit(f"placeholder {self_hosted_placeholder} not found in {src}")
 
-          dst.write_text(content.replace(placeholder, providers_block), encoding="utf-8")
+          content = content.replace(placeholder, providers_block)
+          content = content.replace(self_hosted_placeholder, self_hosted_block)
+
+          dst.write_text(content, encoding="utf-8")
           print(f"Rendered {dst} with {len(urls)} proxy-provider(s): {', '.join(provider_name(i, len(urls)) for i in range(1, len(urls) + 1))}")
+          if self_hosted_block:
+              print("Included self-hosted proxy provider.")
           PY
 
       - name: Package config
@@ -116,19 +212,9 @@ jobs:
 
       - name: Deploy config via SCP
         env:
-          SCP_KEY: ${{ secrets.SCP_KEY }}
           HOST: ${{ secrets.HOST }}
           PORT: ${{ secrets.PORT }}
         run: |
-          if [ -z "$SCP_KEY" ] || [ -z "$HOST" ] || [ -z "$PORT" ]; then
-            echo "Deploy secrets not configured (SCP_KEY/HOST/PORT), skipping deployment."
-            exit 0
-          fi
-
-          mkdir -p ~/.ssh
-          echo "$SCP_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
           scp -o StrictHostKeyChecking=no -P "$PORT" -r ./config.tar.gz "www@${HOST}:/www/private/"
           ssh -o StrictHostKeyChecking=no -p "$PORT" "www@${HOST}" "tar -zxf /www/private/config.tar.gz -C /www/private/"
 

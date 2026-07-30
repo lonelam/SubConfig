@@ -20,6 +20,7 @@ proxies:
 
 proxy-providers:
 __PROXY_PROVIDERS__
+__SELF_HOSTED_PROXY__
 
 rule-providers:
   reqable:
