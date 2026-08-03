@@ -331,6 +331,7 @@ proxy-groups:
     proxies:
       - ♻️ 自动选择
       - 🚀 手动切换
+      - 🏠 自建节点
       - 🇭🇰 香港节点
       - 🇨🇳 台湾节点
       - 🇸🇬 狮城节点
@@ -355,6 +356,7 @@ proxy-groups:
     proxies:
       - 🚀 节点选择
       - ♻️ 自动选择
+      - 🏠 自建节点
       - 🇭🇰 香港节点
       - 🇨🇳 台湾节点
       - 🇸🇬 狮城节点
@@ -363,6 +365,14 @@ proxy-groups:
       - 🇰🇷 韩国节点
     url: http://www.gstatic.com/generate_204
     interval: 300
+
+  - name: 🏠 自建节点
+    type: url-test
+    include-all-providers: true
+    filter: "(自建|🏠)"
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
 
   - name: 🇭🇰 香港节点
     type: url-test
