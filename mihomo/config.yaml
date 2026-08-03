@@ -17,10 +17,10 @@ proxies:
     type: socks5
     server: 127.0.0.1
     port: 9000
+__SELF_HOSTED_PROXIES__
 
 proxy-providers:
 __PROXY_PROVIDERS__
-__SELF_HOSTED_PROXY__
 
 rule-providers:
   reqable:
@@ -346,7 +346,8 @@ proxy-groups:
 
   - name: ♻️ 自动选择
     type: url-test
-    include-all-providers: true
+    include-all: true
+    exclude-filter: "^Debugging$"
     url: http://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -368,15 +369,15 @@ proxy-groups:
 
   - name: 🏠 自建节点
     type: url-test
-    include-all-providers: true
-    filter: "(自建|🏠)"
+    include-all-proxies: true
+    exclude-filter: "^Debugging$"
     url: http://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
 
   - name: 🇭🇰 香港节点
     type: url-test
-    include-all-providers: true
+    include-all: true
     filter: "(港|HK|hk|Hong Kong|HongKong|hongkong)"
     url: http://www.gstatic.com/generate_204
     interval: 300
@@ -384,7 +385,7 @@ proxy-groups:
 
   - name: 🇨🇳 台湾节点
     type: url-test
-    include-all-providers: true
+    include-all: true
     filter: "(台|新北|彰化|TW|Taiwan)"
     url: http://www.gstatic.com/generate_204
     interval: 300
@@ -392,7 +393,7 @@ proxy-groups:
 
   - name: 🇸🇬 狮城节点
     type: url-test
-    include-all-providers: true
+    include-all: true
     filter: "(新加坡|坡|狮城|SG|Singapore)"
     url: http://www.gstatic.com/generate_204
     interval: 300
@@ -400,7 +401,7 @@ proxy-groups:
 
   - name: 🇯🇵 日本节点
     type: url-test
-    include-all-providers: true
+    include-all: true
     filter: "(日本|东京|大阪|埼玉|JP|Japan)"
     url: http://www.gstatic.com/generate_204
     interval: 300
@@ -408,7 +409,7 @@ proxy-groups:
 
   - name: 🇺🇲 美国节点
     type: url-test
-    include-all-providers: true
+    include-all: true
     filter: "(美|洛杉矶|西雅图|硅谷|US|United States)"
     url: http://www.gstatic.com/generate_204
     interval: 300
@@ -416,7 +417,7 @@ proxy-groups:
 
   - name: 🇰🇷 韩国节点
     type: url-test
-    include-all-providers: true
+    include-all: true
     filter: "(KR|Korea|KOR|首尔|韩|韓)"
     url: http://www.gstatic.com/generate_204
     interval: 300

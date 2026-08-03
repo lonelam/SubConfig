@@ -73,7 +73,7 @@ jobs:
           src = Path("mihomo/config.yaml")
           dst = Path("mihomo/config.release.yaml")
           placeholder = "__PROXY_PROVIDERS__"
-          self_hosted_placeholder = "__SELF_HOSTED_PROXY__"
+          self_hosted_placeholder = "__SELF_HOSTED_PROXIES__"
           exclude_filter = "(跳转域名|到期|请先购买|剩余流量|时间|官网|产品|平台|每月刷新|一元机场.ink|管人痴|下次重置剩余)"
 
           def parse_subscribe_urls(text: str) -> list[str]:
@@ -131,11 +131,11 @@ jobs:
                   for item in node:
                       mask_secret_values(item)
 
-          def render_self_hosted_provider() -> str:
+          def render_self_hosted_proxies() -> str:
               proxies_file = Path("self-hosted-proxies.yaml")
               raw = proxies_file.read_text(encoding="utf-8").strip() if proxies_file.exists() else ""
               if not raw:
-                  print("self-hosted-proxies.yaml is empty or missing on the server, skipping self-hosted proxy provider.")
+                  print("self-hosted-proxies.yaml is empty or missing on the server, skipping self-hosted proxies.")
                   return ""
 
               try:
@@ -154,24 +154,16 @@ jobs:
 
               mask_secret_values(proxies)
 
-              payload_yaml = yaml.dump(
+              proxies_yaml = yaml.dump(
                   proxies, allow_unicode=True, sort_keys=False, default_flow_style=False
               )
-              indented_payload = "\n".join(
-                  f"      {line}" if line else line for line in payload_yaml.splitlines()
+              # Clash Verge Rev 2.5.2 filters Inline providers out of its UI
+              # model. Top-level entries remain testable and need no companion
+              # provider file on the client.
+              indented_proxies = "\n".join(
+                  f"  {line}" if line else line for line in proxies_yaml.splitlines()
               )
-
-              lines = [
-                  "  self-hosted:",
-                  "    type: inline",
-                  "    health-check:",
-                  "      enable: true",
-                  "      url: http://www.gstatic.com/generate_204",
-                  "      interval: 300",
-                  "    payload:",
-                  indented_payload,
-              ]
-              return "\n".join(lines)
+              return indented_proxies
 
           subscribe = Path("subscribe.txt").read_text(encoding="utf-8")
           urls = parse_subscribe_urls(subscribe)
@@ -187,7 +179,7 @@ jobs:
           ]
           providers_block = "\n".join(providers)
 
-          self_hosted_block = render_self_hosted_provider()
+          self_hosted_block = render_self_hosted_proxies()
 
           content = src.read_text(encoding="utf-8")
           if placeholder not in content:
@@ -198,10 +190,17 @@ jobs:
           content = content.replace(placeholder, providers_block)
           content = content.replace(self_hosted_placeholder, self_hosted_block)
 
+          try:
+              rendered = yaml.safe_load(content)
+          except yaml.YAMLError as exc:
+              raise SystemExit(f"Rendered Mihomo configuration is not valid YAML: {exc}")
+          if not isinstance(rendered, dict) or not isinstance(rendered.get("proxies"), list):
+              raise SystemExit("Rendered Mihomo configuration must contain a top-level proxies list.")
+
           dst.write_text(content, encoding="utf-8")
           print(f"Rendered {dst} with {len(urls)} proxy-provider(s): {', '.join(provider_name(i, len(urls)) for i in range(1, len(urls) + 1))}")
           if self_hosted_block:
-              print("Included self-hosted proxy provider.")
+              print("Included self-hosted top-level proxies.")
           PY
 
       - name: Package config
