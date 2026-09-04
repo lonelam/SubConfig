@@ -4,6 +4,33 @@ subconverter外部配置以及利用actions自动更新订阅转换
 重点在利用actions更新订阅转换并发布到自己的服务器，  
 [.github/workflows/subconverter.yml](.github/workflows/subconverter.yml)
 
+## Mihomo provider 别名
+
+当前 [Mihomo workflow](.github/workflows/mihomo.yml) 从服务器的
+`${SECRETS_PATH:-/www/private/secrets}/subscribe.txt` 读取订阅。文件每行支持两种格式：
+
+```text
+香港机场|https://a.example/subscribe?token=...
+备用 机场|https://b.example/subscribe?token=...
+https://legacy.example/subscribe?token=...
+```
+
+- `别名|URL` 使用第一个 `|` 分隔；旧的纯 URL 格式仍然可用。
+- 别名可使用 Unicode 字母/数字（包括中文）、空格、`.`、`-`、`_`，最长 64 个字符；首尾需为字母、数字或 `_`，别名不能重复。
+- 显式别名会经过安全规范化后成为 provider 名称（如空格和 `.` 会转成 `-`），节点显示为 `[别名] 原节点名`。
+- 未设别名时继续自动使用 `airport`、`airport-1` 等名称。Mihomo provider 只接受 `http(s)://` 订阅。
+
+可直接编辑远程 `subscribe.txt`，也可运行：
+
+```shell
+python3 manage_secrets.py
+```
+
+菜单 `2` 可添加带别名的订阅，菜单 `3` 可给已有订阅设置、修改或删除别名。保存后需手动运行
+`Build and Deploy Mihomo Config` workflow，或等待定时任务。
+
+> 下面的 `SUBSCRIBE` GitHub Secret 说明属于旧的 subconverter 流程；当前 Mihomo workflow 不读取该 Secret。
+
 ## Getting Started
 fork后点击右上角的 Star 星星按钮即可试用，  
 需要使用发布功能的话需要配置几个secrets  

@@ -65,7 +65,11 @@ jobs:
         run: |
           pip install --quiet pyyaml
           python3 - <<'PY'
+          import hashlib
+          import json
           import re
+          import unicodedata
+          from dataclasses import dataclass
           from pathlib import Path
 
           import yaml
@@ -76,41 +80,178 @@ jobs:
           self_hosted_placeholder = "__SELF_HOSTED_PROXIES__"
           exclude_filter = "(跳转域名|到期|请先购买|剩余流量|时间|官网|产品|平台|每月刷新|一元机场.ink|管人痴|下次重置剩余)"
 
-          def parse_subscribe_urls(text: str) -> list[str]:
-              urls: list[str] = []
-              skipped: list[str] = []
-              for raw in text.splitlines():
-                  line = raw.strip()
-                  if not line:
+          # subscribe.txt accepts either a bare URL (the legacy format) or
+          # ``alias|URL``.  The separator is deliberately uncommon in URLs,
+          # and splitting only once still allows a literal ``|`` in a URL.
+          # Aliases are kept separately from the provider key: the former is
+          # what users see in node names, while the latter is a filesystem- and
+          # YAML-safe slug.
+          ALIAS_PATTERN = re.compile(r"^[\w][\w .-]*\w$|^[\w]$", re.UNICODE)
+          URL_SCHEME_PATTERN = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
+          MAX_ALIAS_LENGTH = 64
+          MAX_PROVIDER_NAME_BYTES = 200
+          RESERVED_PROVIDER_NAMES = {
+              "default", "con", "prn", "aux", "nul",
+              *(f"com{i}" for i in range(1, 10)),
+              *(f"lpt{i}" for i in range(1, 10)),
+          }
+
+          @dataclass(frozen=True)
+          class SubscribeEntry:
+              alias: str | None
+              url: str
+              line_no: int
+
+          @dataclass(frozen=True)
+          class ProviderSpec:
+              name: str
+              url: str
+              prefix_name: str | None
+
+          def yaml_quote(value: str) -> str:
+              # JSON strings are valid YAML scalars and safely quote keys,
+              # paths, URLs, and prefixes containing punctuation or Unicode.
+              return json.dumps(value, ensure_ascii=False)
+
+          def validate_alias(raw_alias: str, line_no: int) -> str:
+              alias = unicodedata.normalize("NFKC", raw_alias.strip())
+              if not alias:
+                  raise SystemExit(f"subscribe.txt line {line_no}: alias must not be empty")
+              if len(alias) > MAX_ALIAS_LENGTH:
+                  raise SystemExit(
+                      f"subscribe.txt line {line_no}: alias is too long "
+                      f"(maximum {MAX_ALIAS_LENGTH} characters)"
+                  )
+              if not ALIAS_PATTERN.fullmatch(alias):
+                  raise SystemExit(
+                      f"subscribe.txt line {line_no}: invalid alias {alias!r}; "
+                      "use Unicode letters/digits, spaces, '.', '-' or '_' only "
+                      "and start/end with a letter, digit or '_'"
+                  )
+              return alias
+
+          def provider_slug(alias: str, line_no: int) -> str:
+              # Dots and whitespace are separators in a path, so normalize
+              # them to '-' before retaining Unicode word characters.  The
+              # alias validator above excludes path separators and controls.
+              slug = re.sub(r"[\s.]+", "-", alias, flags=re.UNICODE)
+              slug = re.sub(r"[^\w-]", "-", slug, flags=re.UNICODE)
+              slug = re.sub(r"-+", "-", slug).strip("-")
+              if not slug:
+                  raise SystemExit(f"subscribe.txt line {line_no}: alias has no usable provider name")
+              if slug.casefold() in RESERVED_PROVIDER_NAMES:
+                  slug = f"{slug}-provider"
+              encoded_slug = slug.encode("utf-8")
+              if len(encoded_slug) > MAX_PROVIDER_NAME_BYTES:
+                  digest = hashlib.sha256(encoded_slug).hexdigest()[:12]
+                  suffix = f"-{digest}"
+                  byte_budget = MAX_PROVIDER_NAME_BYTES - len(suffix)
+                  while len(slug.encode("utf-8")) > byte_budget:
+                      slug = slug[:-1]
+                  slug = f"{slug}{suffix}"
+              return slug
+
+          def parse_subscribe_entries(text: str) -> list[SubscribeEntry]:
+              entries: list[SubscribeEntry] = []
+              skipped: list[tuple[int, str]] = []
+              for line_no, raw in enumerate(text.splitlines(), start=1):
+                  line = raw.lstrip("\ufeff").strip()
+                  if not line or line.startswith("#"):
                       continue
-                  if re.match(r"^https?://", line, re.I):
-                      urls.append(line)
+
+                  alias: str | None = None
+                  url = line
+                  # Detect a legacy URL before interpreting `|` as the alias
+                  # delimiter, so literal pipes inside URLs stay intact.
+                  if not URL_SCHEME_PATTERN.match(line) and "|" in line:
+                      raw_alias, url = line.split("|", 1)
+                      alias = validate_alias(raw_alias, line_no)
+                      url = url.strip()
+                      if not url:
+                          raise SystemExit(f"subscribe.txt line {line_no}: URL must not be empty")
+
+                  if re.match(r"^https?://", url, re.I):
+                      entries.append(SubscribeEntry(alias=alias, url=url, line_no=line_no))
+                  elif alias is not None:
+                      raise SystemExit(
+                          f"subscribe.txt line {line_no}: aliases require an http(s) subscription URL"
+                      )
                   else:
-                      skipped.append(line)
+                      # Keep the old behavior for unsupported tg:// and other
+                      # lines, but do not print their contents (they may carry
+                      # credentials/tokens in the URL).
+                      skipped.append((line_no, line))
+
               if skipped:
                   print("Skipped non-http lines (mihomo proxy-providers only support http subscriptions):")
-                  for item in skipped:
-                      print(f"  - {item[:80]}{'...' if len(item) > 80 else ''}")
-              return urls
+                  for line_no, _ in skipped:
+                      print(f"  - line {line_no}")
+              return entries
 
           def provider_name(index: int, total: int) -> str:
               if total == 1:
                   return "airport"
               return f"airport-{index}"
 
-          def render_provider(name: str, url: str) -> str:
+          def build_provider_specs(entries: list[SubscribeEntry]) -> list[ProviderSpec]:
+              # Explicit aliases win; bare URLs retain the historical
+              # airport/airport-N names. Check final slugs so an alias cannot
+              # overwrite another provider in YAML or on disk.
+              seen: dict[str, tuple[str, int]] = {}
+              specs: list[ProviderSpec] = []
+              add_prefix = len(entries) > 1 or any(entry.alias is not None for entry in entries)
+
+              for index, entry in enumerate(entries, start=1):
+                  name = (
+                      provider_name(index, len(entries))
+                      if entry.alias is None
+                      else provider_slug(entry.alias, entry.line_no)
+                  )
+                  collision_key = unicodedata.normalize("NFKC", name).casefold()
+                  if collision_key in seen:
+                      previous_name, previous_line = seen[collision_key]
+                      raise SystemExit(
+                          f"subscribe.txt line {entry.line_no}: provider name {name!r} "
+                          f"conflicts with {previous_name!r} on line {previous_line}; "
+                          "use unique aliases"
+                      )
+                  seen[collision_key] = (name, entry.line_no)
+
+                  if entry.alias is not None:
+                      prefix_name = entry.alias
+                  elif add_prefix:
+                      prefix_name = name
+                  else:
+                      prefix_name = None
+                  specs.append(ProviderSpec(name=name, url=entry.url, prefix_name=prefix_name))
+
+              return specs
+
+          def render_provider(name: str, url: str, prefix_name: str | None) -> str:
               lines = [
-                  f"  {name}:",
+                  f"  {yaml_quote(name)}:",
                   "    type: http",
-                  f"    url: {url!r}",
-                  f"    path: ./providers/{name}.yaml",
+                  f"    url: {yaml_quote(url)}",
+                  f"    path: {yaml_quote(f'./providers/{name}.yaml')}",
                   "    interval: 3600",
                   "    health-check:",
                   "      enable: true",
                   "      url: http://www.gstatic.com/generate_204",
                   "      interval: 300",
-                  f"    exclude-filter: {exclude_filter!r}",
               ]
+              # Keep the source provider visible after Mihomo merges all
+              # provider nodes into the aggregate proxy groups.  Without
+              # this, identically named nodes from different subscriptions
+              # are indistinguishable in the client UI.  An explicit alias is
+              # also useful with one provider, while a lone legacy URL keeps
+              # its previous provider and node names for compatibility.
+              if prefix_name is not None:
+                  additional_prefix = f"[{prefix_name}] "
+                  lines.extend([
+                      "    override:",
+                      f"      additional-prefix: {yaml_quote(additional_prefix)}",
+                  ])
+              lines.append(f"    exclude-filter: {yaml_quote(exclude_filter)}")
               return "\n".join(lines)
 
           # Fields that are safe to print in build logs unmasked (structural, not secret).
@@ -166,16 +307,19 @@ jobs:
               return indented_proxies
 
           subscribe = Path("subscribe.txt").read_text(encoding="utf-8")
-          urls = parse_subscribe_urls(subscribe)
-          if not urls:
+          entries = parse_subscribe_entries(subscribe)
+          if not entries:
               raise SystemExit("No valid http(s) subscribe URL found in subscribe.txt fetched from the server.")
 
-          for url in urls:
-              print(f"::add-mask::{url}")
+          for entry in entries:
+              print(f"::add-mask::{entry.url}")
 
+          # Prefix explicit aliases even when there is only one provider. A
+          # lone bare URL keeps the old provider and node names.
+          provider_specs = build_provider_specs(entries)
           providers = [
-              render_provider(provider_name(i, len(urls)), url)
-              for i, url in enumerate(urls, start=1)
+              render_provider(spec.name, spec.url, spec.prefix_name)
+              for spec in provider_specs
           ]
           providers_block = "\n".join(providers)
 
@@ -198,7 +342,10 @@ jobs:
               raise SystemExit("Rendered Mihomo configuration must contain a top-level proxies list.")
 
           dst.write_text(content, encoding="utf-8")
-          print(f"Rendered {dst} with {len(urls)} proxy-provider(s): {', '.join(provider_name(i, len(urls)) for i in range(1, len(urls) + 1))}")
+          print(
+              f"Rendered {dst} with {len(provider_specs)} proxy-provider(s): "
+              f"{', '.join(spec.name for spec in provider_specs)}"
+          )
           if self_hosted_block:
               print("Included self-hosted top-level proxies.")
           PY
