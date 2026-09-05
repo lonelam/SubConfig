@@ -487,6 +487,10 @@ proxy-groups:
       - 🛟 节点容灾
       - 🇺🇲 美国节点
       - 🇯🇵 日本节点
+    # Append every Singapore node after the groups above, so a specific one
+    # can be pinned when an AI service blocks the auto-selected exit.
+    include-all: true
+    filter: "(新加坡|坡|狮城|SG|Singapore)"
 
   - name: 🎶 网易音乐
     type: select
