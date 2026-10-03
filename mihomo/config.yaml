@@ -23,6 +23,20 @@ proxy-providers:
 __PROXY_PROVIDERS__
 
 rule-providers:
+  google:
+    type: http
+    behavior: classical
+    format: text
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.list"
+    path: ./ruleset/google.yaml
+    interval: 86400
+  google-extra:
+    type: http
+    behavior: classical
+    format: text
+    url: "https://raw.githubusercontent.com/lonelam/SubConfig/main/Google.list"
+    path: ./ruleset/google-extra.yaml
+    interval: 86400
   reqable:
     type: http
     behavior: classical
@@ -585,11 +599,15 @@ rules:
   - RULE-SET,direct,🎯 全球直连
   - RULE-SET,privacy,🔒 隐私保护
   - RULE-SET,local-area-network,🎯 全球直连
+  # Keep Google services on the AI exit before direct, ad and media rules.
+  - RULE-SET,google,💬 Ai应用
+  - RULE-SET,google-cn,💬 Ai应用
+  - RULE-SET,google-fcm,💬 Ai应用
+  - RULE-SET,youtube,💬 Ai应用
+  - RULE-SET,google-extra,💬 Ai应用
   - RULE-SET,unban,🎯 全球直连
   - RULE-SET,ban-ad,🛑 广告拦截
   - RULE-SET,ban-program-ad,🍃 应用净化
-  - RULE-SET,google-fcm,📢 谷歌FCM
-  - RULE-SET,google-cn,🎯 全球直连
   - RULE-SET,steam-cn,🎯 全球直连
   - RULE-SET,onedrive,Ⓜ️ 微软云盘
   - RULE-SET,microsoft,Ⓜ️ 微软服务
@@ -605,7 +623,6 @@ rules:
   - RULE-SET,sony,🎮 游戏平台
   - RULE-SET,steam,🎮 游戏平台
   - RULE-SET,nintendo,🎮 游戏平台
-  - RULE-SET,youtube,📹 油管视频
   - RULE-SET,netflix,🎥 奈飞视频
   - RULE-SET,bahamut,📺 巴哈姆特
   - RULE-SET,bilibili-hmt,📺 哔哩哔哩

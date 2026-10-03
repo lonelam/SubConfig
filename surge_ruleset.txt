@@ -1,12 +1,10 @@
-🎯 全球直连,https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/Ruleset/GoogleCN.list
 🚀 节点选择,https://github.com/AoEiuV020/SubConfig/raw/main/steam-proxy.list
 🎯 全球直连,https://github.com/AoEiuV020/SubConfig/raw/main/steam-direct.list
 🎯 全球直连,https://github.com/AoEiuV020/SubConfig/raw/main/ubisoft-direct.list
 🐙 GITHUB,https://github.com/AoEiuV020/SubConfig/raw/main/github.list
 🤖 OpenAI,https://github.com/AoEiuV020/SubConfig/raw/main/openAi.list
-🤖 OpenAI,https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/refs/heads/master/Clash/Ruleset/Gemini.list
+💬 Ai应用,https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/refs/heads/master/Clash/Ruleset/Gemini.list
 🖼️ Imgur,https://github.com/AoEiuV020/SubConfig/raw/main/imgur.list
-📹 YouTube,https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/Ruleset/YouTube.list
 🎬 EMBY,https://github.com/AoEiuV020/SubConfig/raw/main/emby.list
 🎥 奈飞视频,https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/Netflix.list
 Ⓜ️ 微软服务,https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/Ruleset/Microsoft.list

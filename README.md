@@ -4,6 +4,17 @@ subconverter外部配置以及利用actions自动更新订阅转换
 重点在利用actions更新订阅转换并发布到自己的服务器，  
 [.github/workflows/subconverter.yml](.github/workflows/subconverter.yml)
 
+## Google 分流
+
+Google 服务（含登录、Gemini、reCAPTCHA、静态资源、FCM 和 YouTube）统一分流到 `💬 Ai应用`，
+规则优先于 UnBan、广告拦截、国内直连及其他媒体分流。Mihomo 和所有 subconverter 配置使用相同策略。
+更新订阅后，可在 `💬 Ai应用` 中固定一个可用节点以保持出口一致。
+
+[Google.list](Google.list) 补充 Google 基础域名与 IPv4/IPv6 服务地址。
+IP 范围按 [Google 官方说明](https://docs.cloud.google.com/vpc/docs/access-apis-external-ip)
+从 `goog.json` 中减去 Google Cloud 客户地址范围 `cloud.json`；运行
+`python3 script/update_google_rules.py` 可刷新该文件，提交后发布新规则。
+
 ## Mihomo provider 别名
 
 当前 [Mihomo workflow](.github/workflows/mihomo.yml) 从服务器的
